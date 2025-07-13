@@ -43,7 +43,7 @@ func New(storage storage.Storage) http.HandlerFunc {
 
 		lastId, err := storage.CreateStudent(
 			student.Name,
-			student.Name,
+			student.Email,
 			student.Age,
 		)
 
