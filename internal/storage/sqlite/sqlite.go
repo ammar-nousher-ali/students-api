@@ -6,7 +6,7 @@ import (
 	"github/com/ammar-nousher-ali/students-api/internal/config"
 	"github/com/ammar-nousher-ali/students-api/internal/types"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/mattn/go-sqlite3" //here we use under score because we just need this driver we are not using it in code we just need driver repo link
 )
 
 type Sqlite struct {
@@ -122,10 +122,6 @@ func (s *Sqlite) GetStudents() ([]types.Student, error) {
 }
 
 func (s *Sqlite) DeleteStudentById(studentId int64) (int64, error) {
-
-
-	//query student first to get the id
-
 
 	stmt, err := s.Db.Prepare("DELETE FROM students WHERE id=?")
 

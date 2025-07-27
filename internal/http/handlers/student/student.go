@@ -21,7 +21,7 @@ func New(storage storage.Storage) http.HandlerFunc {
 
 		var student types.Student
 
-		err := json.NewDecoder(r.Body).Decode(&student)
+		err := json.NewDecoder(r.Body).Decode(&student)//this is getting info from request and decode it as Student struct
 		if errors.Is(err, io.EOF) {
 			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(fmt.Errorf("empty body")))
 			return
@@ -37,7 +37,7 @@ func New(storage storage.Storage) http.HandlerFunc {
 		// request validation
 		if err := validator.New().Struct(student); err != nil {
 
-			validateErrs := err.(validator.ValidationErrors)
+			validateErrs := err.(validator.ValidationErrors) //err.() this is type assertion in go
 			response.WriteJson(w, http.StatusBadRequest, response.ValidationError(validateErrs))
 			return
 		}
