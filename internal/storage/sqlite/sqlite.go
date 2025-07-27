@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github/com/ammar-nousher-ali/students-api/internal/config"
 	"github/com/ammar-nousher-ali/students-api/internal/types"
+	"log/slog"
 
 	_ "github.com/mattn/go-sqlite3" //here we use under score because we just need this driver we are not using it in code we just need driver repo link
 )
@@ -123,19 +124,23 @@ func (s *Sqlite) GetStudents() ([]types.Student, error) {
 
 func (s *Sqlite) DeleteStudentById(studentId int64) (int64, error) {
 
-	stmt, err := s.Db.Prepare("DELETE FROM students WHERE id=?")
+	res, err := s.Db.Exec("DELETE FROM students WHERE id = ?", studentId)
 
 	if err != nil {
+		slog.Error("Error deleting student", "err", err)
+		return 0, err
+
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		slog.Error("Error checking rows affected", "err", err)
 		return 0, err
 
 	}
 
-	defer stmt.Close()
-
-	_, err = stmt.Exec(studentId)
-
-	if err != nil {
-		return 0, err
+	if rows == 0 {
+		slog.Info("0 Rows")
+		return 0, fmt.Errorf("no student found for the id %s", fmt.Sprint(studentId))
 
 	}
 
