@@ -1,6 +1,7 @@
 package student
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -21,7 +22,7 @@ func New(storage storage.Storage) http.HandlerFunc {
 
 		var student types.Student
 
-		err := json.NewDecoder(r.Body).Decode(&student)//this is getting info from request and decode it as Student struct
+		err := json.NewDecoder(r.Body).Decode(&student) //this is getting info from request and decode it as Student struct
 		if errors.Is(err, io.EOF) {
 			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(fmt.Errorf("empty body")))
 			return
@@ -117,6 +118,14 @@ func DeleteStudent(storage storage.Storage) http.HandlerFunc {
 		deletedStudentId, err := storage.DeleteStudentById(intId)
 		if err != nil {
 			slog.Info("error while deleting student")
+
+			if errors.Is(err, sql.ErrNoRows) {
+				noStudentFoundErr := fmt.Errorf("no student found for the id %d", intId)
+				response.WriteJson(w, http.StatusNotFound, response.GeneralError(noStudentFoundErr))
+				return
+
+			}
+
 			response.WriteJson(w, http.StatusInternalServerError, response.GeneralError(err))
 			return
 		}

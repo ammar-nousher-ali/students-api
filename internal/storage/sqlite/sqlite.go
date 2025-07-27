@@ -140,7 +140,7 @@ func (s *Sqlite) DeleteStudentById(studentId int64) (int64, error) {
 
 	if rows == 0 {
 		slog.Info("0 Rows")
-		return 0, fmt.Errorf("no student found for the id %s", fmt.Sprint(studentId))
+		return 0, sql.ErrNoRows
 
 	}
 
