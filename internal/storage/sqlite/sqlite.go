@@ -6,6 +6,7 @@ import (
 	"github/com/ammar-nousher-ali/students-api/internal/config"
 	"github/com/ammar-nousher-ali/students-api/internal/types"
 	"log/slog"
+	"strings"
 
 	_ "github.com/mattn/go-sqlite3" //here we use under score because we just need this driver we are not using it in code we just need driver repo link
 )
@@ -140,6 +141,57 @@ func (s *Sqlite) DeleteStudentById(studentId int64) (int64, error) {
 
 	if rows == 0 {
 		slog.Info("0 Rows")
+		return 0, sql.ErrNoRows
+
+	}
+
+	return studentId, nil
+
+}
+
+func (s *Sqlite) UpdateStudentById(studentId int64, req types.StudentUpdateRequest) (int64, error) {
+	var fields []string
+	var args []any
+
+	if req.Name != nil {
+		fields = append(fields, "name = ?")
+		args = append(args, *req.Name)
+	}
+
+	if req.Email != nil {
+		fields = append(fields, "email = ?")
+		args = append(args, *&req.Email)
+
+	}
+
+	if req.Age != nil {
+		fields = append(fields, "age = ?")
+		args = append(args, *&req.Age)
+
+	}
+
+	if len(fields) == 0 {
+		return 0, fmt.Errorf("no fields to update")
+
+	}
+
+	args = append(args, studentId)
+	query := fmt.Sprintf("UPDATE students SET %s WHERE id = ?", strings.Join(fields, ", "))
+
+	result, err := s.Db.Exec(query, args...)
+	if err != nil {
+		return 0, err
+
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return 0, err
+
+	}
+
+	if rows == 0 {
+
 		return 0, sql.ErrNoRows
 
 	}
