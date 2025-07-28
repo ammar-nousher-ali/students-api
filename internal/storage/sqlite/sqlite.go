@@ -43,6 +43,16 @@ func New(cfg *config.Config) (*Sqlite, error) {
 
 func (s *Sqlite) CreateStudent(name string, email string, age int) (int64, error) {
 
+	exists, err := s.checkEmailExists(email)
+	if err != nil {
+		return 0, err
+	}
+
+	if exists {
+
+		return 0, fmt.Errorf("student with this email %s already exists", email)
+	}
+
 	stmt, err := s.Db.Prepare("INSERT INTO students (name, email, age) VALUES (?, ?, ?)")
 	if err != nil {
 		return 0, err
@@ -62,6 +72,15 @@ func (s *Sqlite) CreateStudent(name string, email string, age int) (int64, error
 	}
 
 	return lastId, nil
+}
+
+func (s *Sqlite) checkEmailExists(email string) (bool, error) {
+	var count int
+	err := s.Db.QueryRow("SELECT COUNT(*) FROM students WHERE email = ?", email).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
 
 func (s *Sqlite) GetStudentById(id int64) (types.Student, error) {
