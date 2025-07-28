@@ -1,4 +1,4 @@
-package types
+package model
 
 type Student struct {
 	Id    int64  `json:"id"`

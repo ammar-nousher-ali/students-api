@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github/com/ammar-nousher-ali/students-api/internal/model"
 	"github/com/ammar-nousher-ali/students-api/internal/storage"
-	"github/com/ammar-nousher-ali/students-api/internal/types"
 	"github/com/ammar-nousher-ali/students-api/internal/utils/response"
 	"io"
 	"log/slog"
@@ -21,7 +21,7 @@ func New(storage storage.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		slog.Info("Creating a student")
 
-		var student types.Student
+		var student model.Student
 
 		err := json.NewDecoder(r.Body).Decode(&student) //this is getting info from request and decode it as Student struct
 		if errors.Is(err, io.EOF) {
@@ -234,7 +234,7 @@ func UpdateStudent(storage storage.Storage) http.HandlerFunc {
 
 		slog.Info("Updating student")
 
-		var req types.StudentUpdateRequest
+		var req model.StudentUpdateRequest
 
 		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {

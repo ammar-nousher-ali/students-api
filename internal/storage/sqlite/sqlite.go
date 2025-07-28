@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github/com/ammar-nousher-ali/students-api/internal/config"
-	"github/com/ammar-nousher-ali/students-api/internal/types"
+	"github/com/ammar-nousher-ali/students-api/internal/model"
 	"log/slog"
 	"strings"
 
@@ -83,32 +83,32 @@ func (s *Sqlite) checkEmailExists(email string) (bool, error) {
 	return count > 0, nil
 }
 
-func (s *Sqlite) GetStudentById(id int64) (types.Student, error) {
+func (s *Sqlite) GetStudentById(id int64) (model.Student, error) {
 	stmt, err := s.Db.Prepare("SELECT id, name, email, age FROM students WHERE id=? LIMIT 1")
 
 	if err != nil {
-		return types.Student{}, err
+		return model.Student{}, err
 
 	}
 
 	defer stmt.Close()
 
-	var student types.Student
+	var student model.Student
 
 	err = stmt.QueryRow(id).Scan(&student.Id, &student.Name, &student.Email, &student.Age)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return types.Student{}, fmt.Errorf("no student found for the id %s", fmt.Sprint(id))
+			return model.Student{}, fmt.Errorf("no student found for the id %s", fmt.Sprint(id))
 
 		}
-		return types.Student{}, fmt.Errorf("query error: %w", err)
+		return model.Student{}, fmt.Errorf("query error: %w", err)
 	}
 
 	return student, nil
 
 }
 
-func (s *Sqlite) GetStudents() ([]types.Student, error) {
+func (s *Sqlite) GetStudents() ([]model.Student, error) {
 	stmt, err := s.Db.Prepare("SELECT  id, name, email, age FROM students")
 	if err != nil {
 		return nil, err
@@ -125,10 +125,10 @@ func (s *Sqlite) GetStudents() ([]types.Student, error) {
 
 	defer rows.Close()
 
-	var students []types.Student
+	var students []model.Student
 
 	for rows.Next() {
-		var student types.Student
+		var student model.Student
 
 		err := rows.Scan(&student.Id, &student.Name, &student.Email, &student.Age)
 		if err != nil {
@@ -168,7 +168,7 @@ func (s *Sqlite) DeleteStudentById(studentId int64) (int64, error) {
 
 }
 
-func (s *Sqlite) UpdateStudentById(studentId int64, req types.StudentUpdateRequest) (int64, error) {
+func (s *Sqlite) UpdateStudentById(studentId int64, req model.StudentUpdateRequest) (int64, error) {
 	var fields []string
 	var args []any
 
@@ -219,23 +219,23 @@ func (s *Sqlite) UpdateStudentById(studentId int64, req types.StudentUpdateReque
 
 }
 
-func (s *Sqlite) SearchStudent(queryStr string) ([]types.Student, error) {
+func (s *Sqlite) SearchStudent(queryStr string) ([]model.Student, error) {
 
 	dbQuery := "SELECT * FROM students WHERE name LIKE ?"
 	rows, err := s.Db.Query(dbQuery, "%"+queryStr+"%")
 	if err != nil {
-		return []types.Student{}, err
+		return []model.Student{}, err
 	}
 
 	defer rows.Close()
 
-	var students []types.Student
+	var students []model.Student
 
 	for rows.Next() {
-		var student types.Student
+		var student model.Student
 		err := rows.Scan(&student.Id, &student.Name, &student.Email, &student.Age)
 		if err != nil {
-			return []types.Student{}, err
+			return []model.Student{}, err
 
 		}
 		students = append(students, student)
