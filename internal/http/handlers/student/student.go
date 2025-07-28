@@ -66,11 +66,23 @@ func New(storage storage.Storage) http.HandlerFunc {
 		slog.Info("User created successfully", slog.String("userId", fmt.Sprint(lastId)))
 
 		if err != nil {
-			response.WriteJson(w, http.StatusInternalServerError, err)
+			response.WriteJson(w,
+				http.StatusInternalServerError,
+				response.GeneralError(
+					err,
+					http.StatusInternalServerError,
+				),
+			)
 			return
 		}
 
-		response.WriteJson(w, http.StatusCreated, map[string]int64{"id": lastId})
+		response.WriteJson(w, http.StatusCreated,
+			response.GeneralResponse(
+				"Student created successfully",
+				http.StatusCreated,
+				map[string]int64{"id": lastId},
+			),
+		)
 
 	}
 }
@@ -110,7 +122,13 @@ func GetById(storage storage.Storage) http.HandlerFunc {
 
 		}
 
-		response.WriteJson(w, http.StatusOK, student)
+		response.WriteJson(w, http.StatusOK,
+			response.GeneralResponse(
+				"Student details retrieved successfully",
+				http.StatusOK,
+				student,
+			),
+		)
 
 	}
 }
@@ -125,7 +143,13 @@ func GetList(storage storage.Storage) http.HandlerFunc {
 			return
 		}
 
-		response.WriteJson(w, http.StatusOK, students)
+		response.WriteJson(w, http.StatusOK,
+			response.GeneralResponse(
+				"Students retrieved successfully",
+				http.StatusOK,
+				students,
+			),
+		)
 
 	}
 }
@@ -183,8 +207,13 @@ func DeleteStudent(storage storage.Storage) http.HandlerFunc {
 			return
 		}
 		slog.Info(fmt.Sprintf("deleted student id %d", deletedStudentId))
-		response.WriteJson(w, http.StatusOK, map[string]any{"message": "Student deleted successfully", "id": deletedStudentId})
-
+		response.WriteJson(w, http.StatusOK,
+			response.GeneralResponse(
+				"Student deleted successfully",
+				http.StatusOK,
+				map[string]any{"message": "Student deleted successfully", "id": deletedStudentId},
+			),
+		)
 	}
 }
 
@@ -256,10 +285,16 @@ func UpdateStudent(storage storage.Storage) http.HandlerFunc {
 			return
 		}
 
-		response.WriteJson(w, http.StatusOK, map[string]any{
-			"message": "success",
-			"id":      updatedId,
-		})
+		response.WriteJson(w, http.StatusOK,
+			response.GeneralResponse(
+				"Student updated successfully",
+				http.StatusOK,
+				map[string]any{
+					"message": "success",
+					"id":      updatedId,
+				},
+			),
+		)
 
 	}
 }
@@ -273,7 +308,6 @@ func SearchStudent(storage storage.Storage) http.HandlerFunc {
 		if strings.ToLower(query) == "" {
 
 			emptyQueryErr := fmt.Errorf("please enter something to search")
-			//response.WriteJson(w, http.StatusBadRequest, response.GeneralError(emptyQueryErr))
 
 			response.WriteJson(w,
 				http.StatusBadRequest,
@@ -287,7 +321,7 @@ func SearchStudent(storage storage.Storage) http.HandlerFunc {
 
 		students, err := storage.SearchStudent(query)
 		if err != nil {
-			//response.WriteJson(w, http.StatusInternalServerError, response.GeneralError(err))
+
 			response.WriteJson(w,
 				http.StatusInternalServerError,
 				response.GeneralError(
@@ -304,7 +338,13 @@ func SearchStudent(storage storage.Storage) http.HandlerFunc {
 
 		// }
 
-		response.WriteJson(w, http.StatusOK, students)
+		response.WriteJson(w, http.StatusOK,
+			response.GeneralResponse(
+				"Search completed successfully",
+				http.StatusOK,
+				students,
+			),
+		)
 
 	}
 }

@@ -38,9 +38,14 @@ func GeneralError(err error, statusCode int) Response {
 	}
 }
 
-// func GeneralResponse() Response {
-// return Response{}
-// }
+func GeneralResponse(msg string, statusCode int, data interface{}) Response {
+	return Response{
+		Status:  statusCode,
+		Success: true,
+		Message: msg,
+		Data:    data,
+	}
+}
 
 func ValidationError(errs validator.ValidationErrors, statusCode int) Response {
 	var errMsgs []string
