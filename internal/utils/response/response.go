@@ -10,8 +10,10 @@ import (
 )
 
 type Response struct {
-	Status string `json:"status"`
-	Error  string `json:"error"`
+	Status  int         `json:"status"`
+	Success bool        `json:"success"`
+	Message string      `json:"message"`
+	Data    interface{} `json:"data"`
 }
 
 const (
@@ -26,15 +28,21 @@ func WriteJson(w http.ResponseWriter, status int, data interface{}) error {
 	return json.NewEncoder(w).Encode(data)
 }
 
-func GeneralError(err error) Response {
+func GeneralError(err error, statusCode int) Response {
 	return Response{
 
-		Status: StatusError,
-		Error:  err.Error(),
+		Status:  statusCode,
+		Success: false,
+		Message: err.Error(),
+		Data:    nil,
 	}
 }
 
-func ValidationError(errs validator.ValidationErrors) Response {
+// func GeneralResponse() Response {
+// return Response{}
+// }
+
+func ValidationError(errs validator.ValidationErrors, statusCode int) Response {
 	var errMsgs []string
 
 	for _, err := range errs {
@@ -48,7 +56,9 @@ func ValidationError(errs validator.ValidationErrors) Response {
 	}
 
 	return Response{
-		Status: StatusError,
-		Error:  strings.Join(errMsgs, ", "),
+		Status:  statusCode,
+		Success: false,
+		Message: strings.Join(errMsgs, ", "),
+		Data:    nil,
 	}
 }

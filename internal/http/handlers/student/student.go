@@ -25,13 +25,26 @@ func New(storage storage.Storage) http.HandlerFunc {
 
 		err := json.NewDecoder(r.Body).Decode(&student) //this is getting info from request and decode it as Student struct
 		if errors.Is(err, io.EOF) {
-			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(fmt.Errorf("empty body")))
+			response.WriteJson(w,
+				http.StatusBadRequest,
+				response.GeneralError(
+					fmt.Errorf("empty body"),
+					http.StatusBadRequest,
+				),
+			)
 			return
 
 		}
 
 		if err != nil {
-			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(err))
+			// response.WriteJson(w, http.StatusBadRequest, response.GeneralError(err))
+			response.WriteJson(w,
+				http.StatusBadRequest,
+				response.GeneralError(
+					err,
+					http.StatusBadRequest,
+				),
+			)
 			return
 
 		}
@@ -40,7 +53,7 @@ func New(storage storage.Storage) http.HandlerFunc {
 		if err := validator.New().Struct(student); err != nil {
 
 			validateErrs := err.(validator.ValidationErrors) //err.() this is type assertion in go
-			response.WriteJson(w, http.StatusBadRequest, response.ValidationError(validateErrs))
+			response.WriteJson(w, http.StatusBadRequest, response.ValidationError(validateErrs, http.StatusBadRequest))
 			return
 		}
 
@@ -70,7 +83,14 @@ func GetById(storage storage.Storage) http.HandlerFunc {
 
 		intId, err := strconv.ParseInt(id, 10, 64)
 		if err != nil {
-			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(err))
+			// response.WriteJson(w, http.StatusBadRequest, response.GeneralError(err))
+			response.WriteJson(w,
+				http.StatusBadRequest,
+				response.GeneralError(
+					fmt.Errorf("empty body"),
+					http.StatusBadRequest,
+				),
+			)
 			return
 
 		}
@@ -78,7 +98,14 @@ func GetById(storage storage.Storage) http.HandlerFunc {
 		student, err := storage.GetStudentById(intId)
 		if err != nil {
 			slog.Error("error getting user", slog.String("id", id))
-			response.WriteJson(w, http.StatusInternalServerError, response.GeneralError(err))
+			// response.WriteJson(w, http.StatusInternalServerError, response.GeneralError(err))
+			response.WriteJson(w,
+				http.StatusInternalServerError,
+				response.GeneralError(
+					fmt.Errorf("empty body"),
+					http.StatusInternalServerError,
+				),
+			)
 			return
 
 		}
@@ -110,7 +137,15 @@ func DeleteStudent(storage storage.Storage) http.HandlerFunc {
 		id := r.PathValue("id")
 		intId, err := strconv.ParseInt(id, 10, 64)
 		if err != nil {
-			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(err))
+			// response.WriteJson(w, http.StatusBadRequest, response.GeneralError(err))
+			response.WriteJson(w,
+				http.StatusBadRequest,
+				response.GeneralError(
+					err,
+					http.StatusBadRequest,
+				),
+			)
+
 			return
 
 		}
@@ -122,12 +157,29 @@ func DeleteStudent(storage storage.Storage) http.HandlerFunc {
 
 			if errors.Is(err, sql.ErrNoRows) {
 				noStudentFoundErr := fmt.Errorf("no student found for the id %d", intId)
-				response.WriteJson(w, http.StatusNotFound, response.GeneralError(noStudentFoundErr))
+				// response.WriteJson(w, http.StatusNotFound, response.GeneralError(noStudentFoundErr))
+
+				response.WriteJson(w,
+					http.StatusNotFound,
+					response.GeneralError(
+						noStudentFoundErr,
+						http.StatusNotFound,
+					),
+				)
+
 				return
 
 			}
 
-			response.WriteJson(w, http.StatusInternalServerError, response.GeneralError(err))
+			// response.WriteJson(w, http.StatusInternalServerError, response.GeneralError(err))
+			response.WriteJson(w,
+				http.StatusInternalServerError,
+				response.GeneralError(
+					err,
+					http.StatusInternalServerError,
+				),
+			)
+
 			return
 		}
 		slog.Info(fmt.Sprintf("deleted student id %d", deletedStudentId))
@@ -146,26 +198,62 @@ func UpdateStudent(storage storage.Storage) http.HandlerFunc {
 		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
-				response.WriteJson(w, http.StatusBadRequest, response.GeneralError(err))
+
+				response.WriteJson(w,
+					http.StatusBadRequest,
+					response.GeneralError(
+						err,
+						http.StatusBadRequest,
+					),
+				)
+
 				return
 			}
 
-			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(fmt.Errorf("error while parsing json")))
+			response.WriteJson(w,
+				http.StatusBadRequest,
+				response.GeneralError(
+					fmt.Errorf("error while parsing json"),
+					http.StatusBadRequest,
+				),
+			)
 			return
 		}
 
 		id := r.PathValue("id")
 		studentId, err := strconv.ParseInt(id, 10, 64)
 		if err != nil {
-			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(err))
+			response.WriteJson(w,
+				http.StatusBadRequest,
+				response.GeneralError(
+					err,
+					http.StatusBadRequest,
+				),
+			)
+			//response.WriteJson(w, http.StatusBadRequest, response.GeneralError(err))
 			return
 		}
 
 		updatedId, err := storage.UpdateStudentById(studentId, req)
 		if err != nil {
-			response.WriteJson(w, http.StatusInternalServerError, response.GeneralError(err))
-			return
+			if errors.Is(err, sql.ErrNoRows) {
+				response.WriteJson(w,
+					http.StatusNotFound,
+					response.GeneralError(err, http.StatusNotFound),
+				)
 
+				return
+
+			}
+
+			response.WriteJson(w,
+				http.StatusInternalServerError,
+				response.GeneralError(
+					err,
+					http.StatusInternalServerError,
+				),
+			)
+			return
 		}
 
 		response.WriteJson(w, http.StatusOK, map[string]any{
@@ -185,20 +273,35 @@ func SearchStudent(storage storage.Storage) http.HandlerFunc {
 		if strings.ToLower(query) == "" {
 
 			emptyQueryErr := fmt.Errorf("please enter something to search")
-			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(emptyQueryErr))
+			//response.WriteJson(w, http.StatusBadRequest, response.GeneralError(emptyQueryErr))
+
+			response.WriteJson(w,
+				http.StatusBadRequest,
+				response.GeneralError(
+					emptyQueryErr,
+					http.StatusBadRequest,
+				),
+			)
 			return
 		}
 
 		students, err := storage.SearchStudent(query)
 		if err != nil {
-			response.WriteJson(w, http.StatusInternalServerError, response.GeneralError(err))
+			//response.WriteJson(w, http.StatusInternalServerError, response.GeneralError(err))
+			response.WriteJson(w,
+				http.StatusInternalServerError,
+				response.GeneralError(
+					err,
+					http.StatusInternalServerError,
+				),
+			)
 			return
 
 		}
 
 		// if len(students)==0 {
 		// 	response.WriteJson(w,http.StatusOK,)
-			
+
 		// }
 
 		response.WriteJson(w, http.StatusOK, students)
