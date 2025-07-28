@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github/com/ammar-nousher-ali/students-api/internal/auth"
 	"github/com/ammar-nousher-ali/students-api/internal/config"
 	"github/com/ammar-nousher-ali/students-api/internal/http/handlers/student"
 	"github/com/ammar-nousher-ali/students-api/internal/storage/sqlite"
@@ -33,6 +34,9 @@ func main() {
 	//setup router
 
 	router := http.NewServeMux()
+	authHandler := auth.AuthHandler{
+		Storage: storage,
+	}
 
 	router.HandleFunc("POST /api/students", student.New(storage))
 	router.HandleFunc("GET /api/students/{id}", student.GetById(storage))
@@ -40,6 +44,7 @@ func main() {
 	router.HandleFunc("DELETE /api/students/{id}", student.DeleteStudent(storage))
 	router.HandleFunc("PUT /api/students/{id}", student.UpdateStudent(storage))
 	router.HandleFunc("GET /api/students/search", student.SearchStudent(storage))
+	router.HandleFunc("POST /api/signup", authHandler.SignUp)
 
 	//setup server
 
