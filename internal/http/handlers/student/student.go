@@ -12,6 +12,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -171,6 +172,36 @@ func UpdateStudent(storage storage.Storage) http.HandlerFunc {
 			"message": "success",
 			"id":      updatedId,
 		})
+
+	}
+}
+
+func SearchStudent(storage storage.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		slog.Info("srarching student")
+
+		query := r.URL.Query().Get("query")
+		if strings.ToLower(query) == "" {
+
+			emptyQueryErr := fmt.Errorf("please enter something to search")
+			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(emptyQueryErr))
+			return
+		}
+
+		students, err := storage.SearchStudent(query)
+		if err != nil {
+			response.WriteJson(w, http.StatusInternalServerError, response.GeneralError(err))
+			return
+
+		}
+
+		if len(students)==0 {
+			response.WriteJson(w,http.StatusOK,)
+			
+		}
+
+		response.WriteJson(w, http.StatusOK, students)
 
 	}
 }
