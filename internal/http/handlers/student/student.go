@@ -63,9 +63,21 @@ func New(storage storage.Storage) http.HandlerFunc {
 			student.Age,
 		)
 
-		slog.Info("User created successfully", slog.String("userId", fmt.Sprint(lastId)))
+		slog.Info("student created successfully", slog.String("userId", fmt.Sprint(lastId)))
 
 		if err != nil {
+
+			if strings.Contains(err.Error(), "already") {
+				response.WriteJson(w,
+					http.StatusConflict,
+					response.GeneralError(
+						err,
+						http.StatusConflict,
+					),
+				)
+				return
+			}
+
 			response.WriteJson(w,
 				http.StatusInternalServerError,
 				response.GeneralError(
