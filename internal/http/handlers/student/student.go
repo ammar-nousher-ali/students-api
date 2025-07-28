@@ -196,10 +196,10 @@ func SearchStudent(storage storage.Storage) http.HandlerFunc {
 
 		}
 
-		if len(students)==0 {
-			response.WriteJson(w,http.StatusOK,)
+		// if len(students)==0 {
+		// 	response.WriteJson(w,http.StatusOK,)
 			
-		}
+		// }
 
 		response.WriteJson(w, http.StatusOK, students)
 
