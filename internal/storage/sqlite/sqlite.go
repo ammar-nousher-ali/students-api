@@ -199,3 +199,29 @@ func (s *Sqlite) UpdateStudentById(studentId int64, req types.StudentUpdateReque
 	return studentId, nil
 
 }
+
+func (s *Sqlite) SearchStudent(queryStr string) ([]types.Student, error) {
+
+	dbQuery := "SELECT * FROM students WHERE name LIKE ?"
+	rows, err := s.Db.Query(dbQuery, "%"+queryStr+"%")
+	if err != nil {
+		return []types.Student{}, err
+	}
+
+	defer rows.Close()
+
+	var students []types.Student
+
+	for rows.Next() {
+		var student types.Student
+		err := rows.Scan(&student.Id, &student.Name, &student.Email, &student.Age)
+		if err != nil {
+			return []types.Student{}, err
+
+		}
+		students = append(students, student)
+	}
+
+	return students, nil
+
+}

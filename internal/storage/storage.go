@@ -11,4 +11,6 @@ type Storage interface{
 	GetStudents()([]types.Student, error)
 	DeleteStudentById(id int64) (int64,error)
 	UpdateStudentById(id int64, req types.StudentUpdateRequest)(int64, error)
+	SearchStudent(query string)([]types.Student, error)
+
 }
