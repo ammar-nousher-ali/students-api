@@ -2,6 +2,7 @@ package sqlite
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"github/com/ammar-nousher-ali/students-api/internal/config"
 	"github/com/ammar-nousher-ali/students-api/internal/model"
@@ -28,6 +29,19 @@ func New(cfg *config.Config) (*Sqlite, error) {
 	email TEXT,
 	age INTEGER
 
+	)`)
+
+	if err != nil {
+		return nil, err
+
+	}
+
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS users(
+ 	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL,
+    role TEXT NOT NULL CHECK (role IN ('student', 'teacher', 'admin'))
 	)`)
 
 	if err != nil {
@@ -242,5 +256,56 @@ func (s *Sqlite) SearchStudent(queryStr string) ([]model.Student, error) {
 	}
 
 	return students, nil
+
+}
+
+func (s *Sqlite) IsEmailTaken(email string) (bool, error) {
+
+	var count int
+	row := s.Db.QueryRow("SELECT COUNT(*) from users WHERE email = ?", email)
+	err := row.Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+func (s *Sqlite) CreateUser(user model.User) (int64, error) {
+	stmt, err := s.Db.Prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)")
+
+	if err != nil {
+		return 0, err
+	}
+	defer stmt.Close()
+
+	res, err := stmt.Exec(user.Name, user.Email, user.Password, user.Role)
+	if err != nil {
+		return 0, err
+	}
+
+	lastId, err := res.LastInsertId()
+	if err != nil {
+		return 0, err
+
+	}
+
+	return lastId, nil
+}
+
+func (s *Sqlite) GetUserByEmail(email string) (*model.User, error) {
+	var user model.User
+	row := s.Db.QueryRow("SELECT id, name, email, password, role from users WHERE email = ? LIMIT 1", email)
+
+	err := row.Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.Role)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			err = errors.New("user not found with this email")
+			return nil, err
+		}
+
+		return nil, err
+	}
+
+	return &user, nil
 
 }

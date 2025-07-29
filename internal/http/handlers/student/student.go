@@ -52,7 +52,8 @@ func New(storage storage.Storage) http.HandlerFunc {
 		// request validation
 		if err := validator.New().Struct(student); err != nil {
 
-			validateErrs := err.(validator.ValidationErrors) //err.() this is type assertion in go
+			var validateErrs validator.ValidationErrors
+			errors.As(err, &validateErrs) //err.() this is type assertion in go
 			response.WriteJson(w, http.StatusBadRequest, response.ValidationError(validateErrs, http.StatusBadRequest))
 			return
 		}
