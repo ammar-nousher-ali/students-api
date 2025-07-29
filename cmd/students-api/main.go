@@ -45,6 +45,7 @@ func main() {
 	router.HandleFunc("PUT /api/students/{id}", student.UpdateStudent(storage))
 	router.HandleFunc("GET /api/students/search", student.SearchStudent(storage))
 	router.HandleFunc("POST /api/signup", authHandler.SignUp)
+	router.HandleFunc("POST /api/signin", authHandler.SignIn)
 
 	//setup server
 

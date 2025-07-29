@@ -20,3 +20,7 @@ type User struct {
 	Password string `json:"password,omitempty"`
 	Role     string `json:"role"`
 }
+type Creds struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required"`
+}

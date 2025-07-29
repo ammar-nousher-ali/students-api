@@ -2,6 +2,7 @@ package sqlite
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"github/com/ammar-nousher-ali/students-api/internal/config"
 	"github/com/ammar-nousher-ali/students-api/internal/model"
@@ -289,4 +290,22 @@ func (s *Sqlite) CreateUser(user model.User) (int64, error) {
 	}
 
 	return lastId, nil
+}
+
+func (s *Sqlite) GetUserByEmail(email string) (*model.User, error) {
+	var user model.User
+	row := s.Db.QueryRow("SELECT id, name, email, password, role from users WHERE email = ? LIMIT 1", email)
+
+	err := row.Scan(&user.ID, &user.Name, &user.Email, &user.Password, &user.Role)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			err = errors.New("user not found with this email")
+			return nil, err
+		}
+
+		return nil, err
+	}
+
+	return &user, nil
+
 }
