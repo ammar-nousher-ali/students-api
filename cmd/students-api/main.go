@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"github/com/ammar-nousher-ali/students-api/internal/auth"
 	"github/com/ammar-nousher-ali/students-api/internal/config"
+	"github/com/ammar-nousher-ali/students-api/internal/http/handlers/auth"
 	"github/com/ammar-nousher-ali/students-api/internal/http/handlers/student"
 	"github/com/ammar-nousher-ali/students-api/internal/storage/sqlite"
 	"log"
