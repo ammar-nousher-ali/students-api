@@ -34,9 +34,6 @@ func main() {
 	//setup router
 
 	router := http.NewServeMux()
-	authHandler := auth.AuthHandler{
-		Storage: storage,
-	}
 
 	router.HandleFunc("POST /api/students", student.New(storage))
 	router.HandleFunc("GET /api/students/{id}", student.GetById(storage))
@@ -44,8 +41,8 @@ func main() {
 	router.HandleFunc("DELETE /api/students/{id}", student.DeleteStudent(storage))
 	router.HandleFunc("PUT /api/students/{id}", student.UpdateStudent(storage))
 	router.HandleFunc("GET /api/students/search", student.SearchStudent(storage))
-	router.HandleFunc("POST /api/signup", authHandler.SignUp)
-	router.HandleFunc("POST /api/signin", authHandler.SignIn)
+	router.HandleFunc("POST /api/signup", auth.Signup(storage))
+	router.HandleFunc("POST /api/signin", auth.SignIn(storage))
 
 	//setup server
 
