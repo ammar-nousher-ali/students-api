@@ -24,7 +24,7 @@ type SignUpRequest struct {
 	Name     string `json:"name" validate:"required"`
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"reqyured,min=6"`
-	Role     string `json:"role" validate:"required,oneof=student teach admin"`
+	Role     string `json:"role" validate:"required,oneof=student teacher"`
 }
 
 type AuthHandler struct {
