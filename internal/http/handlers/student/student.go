@@ -58,11 +58,7 @@ func New(storage storage.Storage) http.HandlerFunc {
 			return
 		}
 
-		lastId, err := storage.CreateStudent(
-			student.Name,
-			student.Email,
-			student.Age,
-		)
+		lastId, err := storage.CreateStudent(student)
 
 		slog.Info("student created successfully", slog.String("userId", fmt.Sprint(lastId)))
 
@@ -272,7 +268,7 @@ func UpdateStudent(storage storage.Storage) http.HandlerFunc {
 					http.StatusBadRequest,
 				),
 			)
-			//response.WriteJson(w, http.StatusBadRequest, response.GeneralError(err))
+
 			return
 		}
 
@@ -281,7 +277,7 @@ func UpdateStudent(storage storage.Storage) http.HandlerFunc {
 			if errors.Is(err, sql.ErrNoRows) {
 				response.WriteJson(w,
 					http.StatusNotFound,
-					response.GeneralError(err, http.StatusNotFound),
+					response.GeneralError(fmt.Errorf("no student found for this id"), http.StatusNotFound),
 				)
 
 				return
@@ -334,6 +330,13 @@ func SearchStudent(storage storage.Storage) http.HandlerFunc {
 
 		students, err := storage.SearchStudent(query)
 		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				response.WriteJson(w,
+					http.StatusNotFound,
+					response.GeneralError(fmt.Errorf("no student found for the given criteria"), http.StatusNotFound),
+				)
+				return
+			}
 
 			response.WriteJson(w,
 				http.StatusInternalServerError,
@@ -345,11 +348,6 @@ func SearchStudent(storage storage.Storage) http.HandlerFunc {
 			return
 
 		}
-
-		// if len(students)==0 {
-		// 	response.WriteJson(w,http.StatusOK,)
-
-		// }
 
 		response.WriteJson(w, http.StatusOK,
 			response.GeneralResponse(

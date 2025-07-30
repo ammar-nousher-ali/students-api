@@ -6,12 +6,12 @@ import (
 
 type Storage interface {
 	//students
-	CreateStudent(name string, email string, age int) (int64, error)
+	CreateStudent(student model.Student) (int64, error)
 	GetStudentById(id int64) (model.Student, error)
 	GetStudents() ([]model.Student, error)
 	DeleteStudentById(id int64) (int64, error)
 	UpdateStudentById(id int64, req model.StudentUpdateRequest) (int64, error)
-	SearchStudent(query string) ([]model.Student, error)
+	SearchStudent(query string) (*[]model.Student, error)
 
 	//users
 	CreateUser(user model.User) (int64, error)

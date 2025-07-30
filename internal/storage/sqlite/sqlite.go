@@ -8,6 +8,7 @@ import (
 	"github/com/ammar-nousher-ali/students-api/internal/model"
 	"log/slog"
 	"strings"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3" //here we use under score because we just need this driver we are not using it in code we just need driver repo link
 )
@@ -27,7 +28,12 @@ func New(cfg *config.Config) (*Sqlite, error) {
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	name TEXT,
 	email TEXT,
-	age INTEGER
+	age INTEGER,
+	phone TEXT,
+	address TEXT,
+	gender TEXT,
+	enrollment_date TIMESTAMP,
+	status TEXT
 
 	)`)
 
@@ -55,26 +61,26 @@ func New(cfg *config.Config) (*Sqlite, error) {
 
 }
 
-func (s *Sqlite) CreateStudent(name string, email string, age int) (int64, error) {
+func (s *Sqlite) CreateStudent(student model.Student) (int64, error) {
 
-	exists, err := s.checkEmailExists(email)
+	exists, err := s.checkEmailExists(student.Email)
 	if err != nil {
 		return 0, err
 	}
 
 	if exists {
 
-		return 0, fmt.Errorf("student with this email %s already exists", email)
+		return 0, fmt.Errorf("student with this email %s already exists", student.Email)
 	}
 
-	stmt, err := s.Db.Prepare("INSERT INTO students (name, email, age) VALUES (?, ?, ?)")
+	stmt, err := s.Db.Prepare("INSERT INTO students (name, email, age, phone, address, gender, enrollment_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		return 0, err
 	}
 
 	defer stmt.Close()
 
-	result, err := stmt.Exec(name, email, age)
+	result, err := stmt.Exec(student.Name, student.Email, student.Age, student.Phone, student.Address, student.Gender, time.Now(), "active")
 	if err != nil {
 		return 0, err
 	}
@@ -88,17 +94,8 @@ func (s *Sqlite) CreateStudent(name string, email string, age int) (int64, error
 	return lastId, nil
 }
 
-func (s *Sqlite) checkEmailExists(email string) (bool, error) {
-	var count int
-	err := s.Db.QueryRow("SELECT COUNT(*) FROM students WHERE email = ?", email).Scan(&count)
-	if err != nil {
-		return false, err
-	}
-	return count > 0, nil
-}
-
 func (s *Sqlite) GetStudentById(id int64) (model.Student, error) {
-	stmt, err := s.Db.Prepare("SELECT id, name, email, age FROM students WHERE id=? LIMIT 1")
+	stmt, err := s.Db.Prepare("SELECT id, name, email, age, phone, address, gender, enrollment_date, status FROM students WHERE id=? LIMIT 1")
 
 	if err != nil {
 		return model.Student{}, err
@@ -109,11 +106,10 @@ func (s *Sqlite) GetStudentById(id int64) (model.Student, error) {
 
 	var student model.Student
 
-	err = stmt.QueryRow(id).Scan(&student.Id, &student.Name, &student.Email, &student.Age)
+	err = stmt.QueryRow(id).Scan(&student.Id, &student.Name, &student.Email, &student.Age, &student.Phone, &student.Address, &student.Gender, &student.EnrollmentDate, &student.Status)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return model.Student{}, fmt.Errorf("no student found for the id %s", fmt.Sprint(id))
-
 		}
 		return model.Student{}, fmt.Errorf("query error: %w", err)
 	}
@@ -123,7 +119,7 @@ func (s *Sqlite) GetStudentById(id int64) (model.Student, error) {
 }
 
 func (s *Sqlite) GetStudents() ([]model.Student, error) {
-	stmt, err := s.Db.Prepare("SELECT  id, name, email, age FROM students")
+	stmt, err := s.Db.Prepare("SELECT  id, name, email, age, phone, address, gender, enrollment_date, status FROM students")
 	if err != nil {
 		return nil, err
 
@@ -144,7 +140,7 @@ func (s *Sqlite) GetStudents() ([]model.Student, error) {
 	for rows.Next() {
 		var student model.Student
 
-		err := rows.Scan(&student.Id, &student.Name, &student.Email, &student.Age)
+		err := rows.Scan(&student.Id, &student.Name, &student.Email, &student.Age, &student.Phone, &student.Address, &student.Gender, &student.EnrollmentDate, &student.Status)
 		if err != nil {
 			return nil, err
 
@@ -193,14 +189,39 @@ func (s *Sqlite) UpdateStudentById(studentId int64, req model.StudentUpdateReque
 
 	if req.Email != nil {
 		fields = append(fields, "email = ?")
-		args = append(args, *&req.Email)
+		args = append(args, *req.Email)
 
 	}
 
 	if req.Age != nil {
 		fields = append(fields, "age = ?")
-		args = append(args, *&req.Age)
+		args = append(args, *req.Age)
 
+	}
+
+	if req.Phone != nil {
+		fields = append(fields, "phone = ?")
+		args = append(args, *req.Phone)
+	}
+
+	if req.Address != nil {
+		fields = append(fields, "address = ?")
+		args = append(args, *req.Address)
+	}
+
+	if req.Gender != nil {
+		fields = append(fields, "gender = ?")
+		args = append(args, *req.Gender)
+	}
+
+	if req.EnrollmentDate != nil {
+		fields = append(fields, "enrollment_date = ?")
+		args = append(args, *req.EnrollmentDate)
+	}
+
+	if req.Status != nil {
+		fields = append(fields, "status =?")
+		args = append(args, *req.Status)
 	}
 
 	if len(fields) == 0 {
@@ -233,12 +254,12 @@ func (s *Sqlite) UpdateStudentById(studentId int64, req model.StudentUpdateReque
 
 }
 
-func (s *Sqlite) SearchStudent(queryStr string) ([]model.Student, error) {
+func (s *Sqlite) SearchStudent(queryStr string) (*[]model.Student, error) {
 
 	dbQuery := "SELECT * FROM students WHERE name LIKE ?"
 	rows, err := s.Db.Query(dbQuery, "%"+queryStr+"%")
 	if err != nil {
-		return []model.Student{}, err
+		return nil, err
 	}
 
 	defer rows.Close()
@@ -247,15 +268,20 @@ func (s *Sqlite) SearchStudent(queryStr string) ([]model.Student, error) {
 
 	for rows.Next() {
 		var student model.Student
-		err := rows.Scan(&student.Id, &student.Name, &student.Email, &student.Age)
+		err := rows.Scan(&student.Id, &student.Name, &student.Email, &student.Age, &student.Phone, &student.Address, &student.Gender, &student.EnrollmentDate, &student.Status)
 		if err != nil {
-			return []model.Student{}, err
+			return nil, err
 
 		}
 		students = append(students, student)
 	}
 
-	return students, nil
+	if len(students) == 0 {
+		return nil, sql.ErrNoRows
+
+	}
+
+	return &students, nil
 
 }
 
@@ -308,4 +334,13 @@ func (s *Sqlite) GetUserByEmail(email string) (*model.User, error) {
 
 	return &user, nil
 
+}
+
+func (s *Sqlite) checkEmailExists(email string) (bool, error) {
+	var count int
+	err := s.Db.QueryRow("SELECT COUNT(*) FROM students WHERE email = ?", email).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
