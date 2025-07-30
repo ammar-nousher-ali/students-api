@@ -11,7 +11,7 @@ type Storage interface {
 	GetStudents() ([]model.Student, error)
 	DeleteStudentById(id int64) (int64, error)
 	UpdateStudentById(id int64, req model.StudentUpdateRequest) (int64, error)
-	SearchStudent(query string) ([]model.Student, error)
+	SearchStudent(query string) (*[]model.Student, error)
 
 	//users
 	CreateUser(user model.User) (int64, error)

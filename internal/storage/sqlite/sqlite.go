@@ -254,12 +254,12 @@ func (s *Sqlite) UpdateStudentById(studentId int64, req model.StudentUpdateReque
 
 }
 
-func (s *Sqlite) SearchStudent(queryStr string) ([]model.Student, error) {
+func (s *Sqlite) SearchStudent(queryStr string) (*[]model.Student, error) {
 
 	dbQuery := "SELECT * FROM students WHERE name LIKE ?"
 	rows, err := s.Db.Query(dbQuery, "%"+queryStr+"%")
 	if err != nil {
-		return []model.Student{}, err
+		return nil, err
 	}
 
 	defer rows.Close()
@@ -268,15 +268,20 @@ func (s *Sqlite) SearchStudent(queryStr string) ([]model.Student, error) {
 
 	for rows.Next() {
 		var student model.Student
-		err := rows.Scan(&student.Id, &student.Name, &student.Email, &student.Age)
+		err := rows.Scan(&student.Id, &student.Name, &student.Email, &student.Age, &student.Phone, &student.Address, &student.Gender, &student.EnrollmentDate, &student.Status)
 		if err != nil {
-			return []model.Student{}, err
+			return nil, err
 
 		}
 		students = append(students, student)
 	}
 
-	return students, nil
+	if len(students) == 0 {
+		return nil, sql.ErrNoRows
+
+	}
+
+	return &students, nil
 
 }
 
