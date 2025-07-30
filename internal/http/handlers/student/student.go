@@ -58,11 +58,7 @@ func New(storage storage.Storage) http.HandlerFunc {
 			return
 		}
 
-		lastId, err := storage.CreateStudent(
-			student.Name,
-			student.Email,
-			student.Age,
-		)
+		lastId, err := storage.CreateStudent(student)
 
 		slog.Info("student created successfully", slog.String("userId", fmt.Sprint(lastId)))
 

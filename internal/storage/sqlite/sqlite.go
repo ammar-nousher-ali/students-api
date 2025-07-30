@@ -8,6 +8,7 @@ import (
 	"github/com/ammar-nousher-ali/students-api/internal/model"
 	"log/slog"
 	"strings"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3" //here we use under score because we just need this driver we are not using it in code we just need driver repo link
 )
@@ -27,7 +28,12 @@ func New(cfg *config.Config) (*Sqlite, error) {
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
 	name TEXT,
 	email TEXT,
-	age INTEGER
+	age INTEGER,
+	phone TEXT,
+	address TEXT,
+	gender TEXT,
+	enrollment_date TIMESTAMP,
+	status TEXT
 
 	)`)
 
@@ -55,26 +61,26 @@ func New(cfg *config.Config) (*Sqlite, error) {
 
 }
 
-func (s *Sqlite) CreateStudent(name string, email string, age int) (int64, error) {
+func (s *Sqlite) CreateStudent(student model.Student) (int64, error) {
 
-	exists, err := s.checkEmailExists(email)
+	exists, err := s.checkEmailExists(student.Email)
 	if err != nil {
 		return 0, err
 	}
 
 	if exists {
 
-		return 0, fmt.Errorf("student with this email %s already exists", email)
+		return 0, fmt.Errorf("student with this email %s already exists", student.Email)
 	}
 
-	stmt, err := s.Db.Prepare("INSERT INTO students (name, email, age) VALUES (?, ?, ?)")
+	stmt, err := s.Db.Prepare("INSERT INTO students (name, email, age, phone, address, gender, enrollment_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		return 0, err
 	}
 
 	defer stmt.Close()
 
-	result, err := stmt.Exec(name, email, age)
+	result, err := stmt.Exec(student.Name, student.Email, student.Age, student.Phone, student.Address, student.Gender, time.Now(), "active")
 	if err != nil {
 		return 0, err
 	}
