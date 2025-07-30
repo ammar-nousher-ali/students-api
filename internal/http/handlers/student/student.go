@@ -268,7 +268,7 @@ func UpdateStudent(storage storage.Storage) http.HandlerFunc {
 					http.StatusBadRequest,
 				),
 			)
-			//response.WriteJson(w, http.StatusBadRequest, response.GeneralError(err))
+
 			return
 		}
 
@@ -277,7 +277,7 @@ func UpdateStudent(storage storage.Storage) http.HandlerFunc {
 			if errors.Is(err, sql.ErrNoRows) {
 				response.WriteJson(w,
 					http.StatusNotFound,
-					response.GeneralError(err, http.StatusNotFound),
+					response.GeneralError(fmt.Errorf("no student found for this id"), http.StatusNotFound),
 				)
 
 				return

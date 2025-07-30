@@ -15,9 +15,21 @@ type Student struct {
 }
 
 type StudentUpdateRequest struct {
-	Name  *string `json:"name"`
-	Email *string `json:"email"`
-	Age   *int    `json:"age"`
+	//All fields are pointers so you can differentiate between:
+	//
+	//Field not provided in JSON request (nil)
+	//
+	//Field provided with a zero value (e.g., "", 0).
+	//
+	//This is crucial for partial updates.
+	Name           *string    `json:"name"`
+	Email          *string    `json:"email"`
+	Age            *int       `json:"age"`
+	Phone          *string    `json:"phone"`
+	Address        *string    `json:"address"`
+	Gender         *string    `json:"gender"`
+	EnrollmentDate *time.Time `json:"enrollment_date"`
+	Status         *string    `json:"status"`
 }
 
 type User struct {

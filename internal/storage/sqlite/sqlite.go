@@ -189,14 +189,39 @@ func (s *Sqlite) UpdateStudentById(studentId int64, req model.StudentUpdateReque
 
 	if req.Email != nil {
 		fields = append(fields, "email = ?")
-		args = append(args, *&req.Email)
+		args = append(args, *req.Email)
 
 	}
 
 	if req.Age != nil {
 		fields = append(fields, "age = ?")
-		args = append(args, *&req.Age)
+		args = append(args, *req.Age)
 
+	}
+
+	if req.Phone != nil {
+		fields = append(fields, "phone = ?")
+		args = append(args, *req.Phone)
+	}
+
+	if req.Address != nil {
+		fields = append(fields, "address = ?")
+		args = append(args, *req.Address)
+	}
+
+	if req.Gender != nil {
+		fields = append(fields, "gender = ?")
+		args = append(args, *req.Gender)
+	}
+
+	if req.EnrollmentDate != nil {
+		fields = append(fields, "enrollment_date = ?")
+		args = append(args, *req.EnrollmentDate)
+	}
+
+	if req.Status != nil {
+		fields = append(fields, "status =?")
+		args = append(args, *req.Status)
 	}
 
 	if len(fields) == 0 {
