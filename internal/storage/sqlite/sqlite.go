@@ -119,7 +119,7 @@ func (s *Sqlite) GetStudentById(id int64) (model.Student, error) {
 }
 
 func (s *Sqlite) GetStudents() ([]model.Student, error) {
-	stmt, err := s.Db.Prepare("SELECT  id, name, email, age FROM students")
+	stmt, err := s.Db.Prepare("SELECT  id, name, email, age, phone, address, gender, enrollment_date, status FROM students")
 	if err != nil {
 		return nil, err
 
@@ -140,7 +140,7 @@ func (s *Sqlite) GetStudents() ([]model.Student, error) {
 	for rows.Next() {
 		var student model.Student
 
-		err := rows.Scan(&student.Id, &student.Name, &student.Email, &student.Age)
+		err := rows.Scan(&student.Id, &student.Name, &student.Email, &student.Age, &student.Phone, &student.Address, &student.Gender, &student.EnrollmentDate, &student.Status)
 		if err != nil {
 			return nil, err
 
