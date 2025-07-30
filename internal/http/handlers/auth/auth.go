@@ -18,7 +18,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var jwtSecret = []byte("mydevtestingkey123456789")
+var JwtSecret = []byte("mydevtestingkey123456789")
 
 type SignUpRequest struct {
 	Name     string `json:"name" validate:"required"`
@@ -144,7 +144,7 @@ func SignIn(storage storage.Storage) http.HandlerFunc {
 			"expires": expires,
 		})
 
-		tokenString, err := token.SignedString(jwtSecret)
+		tokenString, err := token.SignedString(JwtSecret)
 		if err != nil {
 			response.WriteJson(w, http.StatusInternalServerError, response.GeneralError(err, http.StatusInternalServerError))
 			return

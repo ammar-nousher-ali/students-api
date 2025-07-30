@@ -5,6 +5,7 @@ import (
 	"github/com/ammar-nousher-ali/students-api/internal/config"
 	"github/com/ammar-nousher-ali/students-api/internal/http/handlers/auth"
 	"github/com/ammar-nousher-ali/students-api/internal/http/handlers/student"
+	"github/com/ammar-nousher-ali/students-api/internal/middleware"
 	"github/com/ammar-nousher-ali/students-api/internal/storage/sqlite"
 	"log"
 	"log/slog"
@@ -35,14 +36,17 @@ func main() {
 
 	router := http.NewServeMux()
 
-	router.HandleFunc("POST /api/students", student.New(storage))
-	router.HandleFunc("GET /api/students/{id}", student.GetById(storage))
-	router.HandleFunc("GET /api/students", student.GetList(storage))
-	router.HandleFunc("DELETE /api/students/{id}", student.DeleteStudent(storage))
-	router.HandleFunc("PUT /api/students/{id}", student.UpdateStudent(storage))
-	router.HandleFunc("GET /api/students/search", student.SearchStudent(storage))
+	//Public routes
 	router.HandleFunc("POST /api/signup", auth.Signup(storage))
 	router.HandleFunc("POST /api/signin", auth.SignIn(storage))
+
+	//Protected routes
+	router.HandleFunc("POST /api/students", middleware.JWTMiddleware(student.New(storage)))
+	router.HandleFunc("GET /api/students/{id}", middleware.JWTMiddleware(student.GetById(storage)))
+	router.HandleFunc("GET /api/students", middleware.JWTMiddleware(student.GetList(storage)))
+	router.HandleFunc("DELETE /api/students/{id}", middleware.JWTMiddleware(student.DeleteStudent(storage)))
+	router.HandleFunc("PUT /api/students/{id}", middleware.JWTMiddleware(student.UpdateStudent(storage)))
+	router.HandleFunc("GET /api/students/search", middleware.JWTMiddleware(student.SearchStudent(storage)))
 
 	//setup server
 
