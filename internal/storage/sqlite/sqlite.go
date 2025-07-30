@@ -94,17 +94,8 @@ func (s *Sqlite) CreateStudent(student model.Student) (int64, error) {
 	return lastId, nil
 }
 
-func (s *Sqlite) checkEmailExists(email string) (bool, error) {
-	var count int
-	err := s.Db.QueryRow("SELECT COUNT(*) FROM students WHERE email = ?", email).Scan(&count)
-	if err != nil {
-		return false, err
-	}
-	return count > 0, nil
-}
-
 func (s *Sqlite) GetStudentById(id int64) (model.Student, error) {
-	stmt, err := s.Db.Prepare("SELECT id, name, email, age FROM students WHERE id=? LIMIT 1")
+	stmt, err := s.Db.Prepare("SELECT id, name, email, age, phone, address, gender, enrollment_date, status FROM students WHERE id=? LIMIT 1")
 
 	if err != nil {
 		return model.Student{}, err
@@ -115,11 +106,10 @@ func (s *Sqlite) GetStudentById(id int64) (model.Student, error) {
 
 	var student model.Student
 
-	err = stmt.QueryRow(id).Scan(&student.Id, &student.Name, &student.Email, &student.Age)
+	err = stmt.QueryRow(id).Scan(&student.Id, &student.Name, &student.Email, &student.Age, &student.Phone, &student.Address, &student.Gender, &student.EnrollmentDate, &student.Status)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return model.Student{}, fmt.Errorf("no student found for the id %s", fmt.Sprint(id))
-
 		}
 		return model.Student{}, fmt.Errorf("query error: %w", err)
 	}
@@ -314,4 +304,13 @@ func (s *Sqlite) GetUserByEmail(email string) (*model.User, error) {
 
 	return &user, nil
 
+}
+
+func (s *Sqlite) checkEmailExists(email string) (bool, error) {
+	var count int
+	err := s.Db.QueryRow("SELECT COUNT(*) FROM students WHERE email = ?", email).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
