@@ -96,6 +96,52 @@ func New(storage storage.Storage) http.HandlerFunc {
 	}
 }
 
+func NewBatch(storage storage.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var students []model.Student
+
+		err := json.NewDecoder(r.Body).Decode(&students)
+		if err != nil {
+			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(fmt.Errorf("invalid request"), http.StatusBadRequest))
+			return
+		}
+
+		if len(students) == 0 {
+			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(fmt.Errorf("please provide at least one student data to create"), http.StatusBadRequest))
+			return
+		}
+
+		var batchResponse response.BatchResponse
+		for _, student := range students {
+			id, err := storage.CreateStudent(student)
+
+			if err != nil {
+				batchResponse.Data = append(batchResponse.Data, response.BatchData{
+					Success: false,
+					Data: map[string]any{
+						"message": "failed",
+						"reason":  err.Error(),
+					},
+				})
+
+			} else {
+				batchResponse.Data = append(batchResponse.Data, response.BatchData{
+					Success: true,
+					Data: map[string]any{
+						"message": "success",
+						"id":      id,
+					},
+				})
+			}
+
+		}
+
+		response.WriteJson(w, http.StatusOK, response.GeneralBatchResponse("success", http.StatusCreated, batchResponse.Data))
+
+	}
+
+}
+
 func GetById(storage storage.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
