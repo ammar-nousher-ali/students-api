@@ -63,6 +63,7 @@ func Signup(storage storage.Storage) http.HandlerFunc {
 				http.StatusInternalServerError,
 			),
 			)
+			return
 		}
 
 		user := model.User{
@@ -82,6 +83,7 @@ func Signup(storage storage.Storage) http.HandlerFunc {
 						http.StatusInternalServerError),
 				),
 			)
+			return
 		}
 
 		user.ID = userID
