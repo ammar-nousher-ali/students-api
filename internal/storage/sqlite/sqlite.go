@@ -95,7 +95,7 @@ func (s *Sqlite) CreateStudent(student model.Student) (int64, error) {
 }
 
 func (s *Sqlite) GetStudentById(id int64) (model.Student, error) {
-	stmt, err := s.Db.Prepare("SELECT id, name, email, age, phone, address, gender, enrollment_date, status FROM students WHERE id=? LIMIT 1")
+	stmt, err := s.Db.Prepare("SELECT id, name, email, age, phone, address, gender, enrollment_date, status FROM students WHERE id=? AND deleted_at IS NULL LIMIT 1")
 
 	if err != nil {
 		return model.Student{}, err
@@ -109,7 +109,7 @@ func (s *Sqlite) GetStudentById(id int64) (model.Student, error) {
 	err = stmt.QueryRow(id).Scan(&student.Id, &student.Name, &student.Email, &student.Age, &student.Phone, &student.Address, &student.Gender, &student.EnrollmentDate, &student.Status)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return model.Student{}, fmt.Errorf("no student found for the id %s", fmt.Sprint(id))
+			return model.Student{}, err
 		}
 		return model.Student{}, fmt.Errorf("query error: %w", err)
 	}
