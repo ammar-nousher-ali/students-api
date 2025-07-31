@@ -16,6 +16,18 @@ type Response struct {
 	Data    interface{} `json:"data"`
 }
 
+type BatchResponse struct {
+	Status  int         `json:"status"`
+	Success bool        `json:"success"`
+	Message string      `json:"message"`
+	Data    []BatchData `json:"data"`
+}
+
+type BatchData struct {
+	Success bool        `json:"success"`
+	Data    interface{} `json:"data"`
+}
+
 const (
 	StatusOk    = "Ok"
 	StatusError = "Error"
@@ -40,6 +52,15 @@ func GeneralError(err error, statusCode int) Response {
 
 func GeneralResponse(msg string, statusCode int, data interface{}) Response {
 	return Response{
+		Status:  statusCode,
+		Success: true,
+		Message: msg,
+		Data:    data,
+	}
+}
+
+func GeneralBatchResponse(msg string, statusCode int, data []BatchData) BatchResponse {
+	return BatchResponse{
 		Status:  statusCode,
 		Success: true,
 		Message: msg,

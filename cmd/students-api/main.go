@@ -42,6 +42,7 @@ func main() {
 
 	//Protected routes
 	router.HandleFunc("POST /api/students", middleware.JWTMiddleware(student.New(storage)))
+	router.HandleFunc("POST /api/students/batch", middleware.JWTMiddleware(student.NewBatch(storage)))
 	router.HandleFunc("GET /api/students/{id}", middleware.JWTMiddleware(student.GetById(storage)))
 	router.HandleFunc("GET /api/students", middleware.JWTMiddleware(student.GetList(storage)))
 	router.HandleFunc("DELETE /api/students/{id}", middleware.JWTMiddleware(student.DeleteStudent(storage)))
