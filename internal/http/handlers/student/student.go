@@ -119,7 +119,13 @@ func GetById(storage storage.Storage) http.HandlerFunc {
 		student, err := storage.GetStudentById(intId)
 		if err != nil {
 			slog.Error("error getting user", slog.String("id", id))
-			// response.WriteJson(w, http.StatusInternalServerError, response.GeneralError(err))
+
+			if errors.Is(err, sql.ErrNoRows) {
+				slog.Error("sql no rows err", "error", err)
+				response.WriteJson(w, http.StatusNotFound, response.GeneralError(fmt.Errorf("no student found for the given id = %s", id), http.StatusNotFound))
+				return
+			}
+
 			response.WriteJson(w,
 				http.StatusInternalServerError,
 				response.GeneralError(
