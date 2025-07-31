@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github/com/ammar-nousher-ali/students-api/internal/config"
 	"github/com/ammar-nousher-ali/students-api/internal/model"
-	"log/slog"
 	"strings"
 	"time"
 
@@ -33,7 +32,8 @@ func New(cfg *config.Config) (*Sqlite, error) {
 	address TEXT,
 	gender TEXT,
 	enrollment_date TIMESTAMP,
-	status TEXT
+	status TEXT,
+	deleted_at TIMESTAMP
 
 	)`)
 
@@ -119,7 +119,7 @@ func (s *Sqlite) GetStudentById(id int64) (model.Student, error) {
 }
 
 func (s *Sqlite) GetStudents() ([]model.Student, error) {
-	stmt, err := s.Db.Prepare("SELECT  id, name, email, age, phone, address, gender, enrollment_date, status FROM students")
+	stmt, err := s.Db.Prepare("SELECT  id, name, email, age, phone, address, gender, enrollment_date, status FROM students WHERE deleted_at IS NULL")
 	if err != nil {
 		return nil, err
 
@@ -154,22 +154,20 @@ func (s *Sqlite) GetStudents() ([]model.Student, error) {
 
 func (s *Sqlite) DeleteStudentById(studentId int64) (int64, error) {
 
-	res, err := s.Db.Exec("DELETE FROM students WHERE id = ?", studentId)
+	//res, err := s.Db.Exec("DELETE FROM students WHERE id = ?", studentId)
+	res, err := s.Db.Exec("UPDATE students SET deleted_at = ? WHERE id = ?", time.Now(), studentId)
 
 	if err != nil {
-		slog.Error("Error deleting student", "err", err)
 		return 0, err
 
 	}
 	rows, err := res.RowsAffected()
 	if err != nil {
-		slog.Error("Error checking rows affected", "err", err)
 		return 0, err
 
 	}
 
 	if rows == 0 {
-		slog.Info("0 Rows")
 		return 0, sql.ErrNoRows
 
 	}
