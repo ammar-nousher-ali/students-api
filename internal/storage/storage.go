@@ -17,4 +17,7 @@ type Storage interface {
 	CreateUser(user model.User) (int64, error)
 	IsEmailTaken(email string) (bool, error)
 	GetUserByEmail(email string) (*model.User, error)
+
+	//courses
+	CreateCourse(course model.Course) (int64, error)
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github/com/ammar-nousher-ali/students-api/internal/config"
 	"github/com/ammar-nousher-ali/students-api/internal/http/handlers/auth"
+	"github/com/ammar-nousher-ali/students-api/internal/http/handlers/course"
 	"github/com/ammar-nousher-ali/students-api/internal/http/handlers/student"
 	"github/com/ammar-nousher-ali/students-api/internal/middleware"
 	"github/com/ammar-nousher-ali/students-api/internal/storage/sqlite"
@@ -48,6 +49,7 @@ func main() {
 	router.HandleFunc("DELETE /api/students/{id}", middleware.JWTMiddleware(student.DeleteStudent(storage)))
 	router.HandleFunc("PUT /api/students/{id}", middleware.JWTMiddleware(student.UpdateStudent(storage)))
 	router.HandleFunc("GET /api/students/search", middleware.JWTMiddleware(student.SearchStudent(storage)))
+	router.HandleFunc("POST /api/course", middleware.JWTMiddleware(course.New(storage)))
 
 	//setup server
 

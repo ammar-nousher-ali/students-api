@@ -44,3 +44,20 @@ type Creds struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required"`
 }
+
+type Course struct {
+	Id               int64     `json:"id"`
+	CourseCode       string    `json:"course_code" validate:"required"` // unique, required
+	CourseName       string    `json:"course_name" validate:"required"` // required
+	Description      string    `json:"description,omitempty"`
+	Credits          int       `json:"credits" validate:"required"` // required
+	Instructor       string    `json:"instructor,omitempty"`
+	Department       string    `json:"department,omitempty"`
+	Semester         string    `json:"semester,omitempty"`
+	AcademicYear     string    `json:"academic_year,omitempty"`
+	Capacity         int       `json:"capacity,omitempty"`
+	EnrolledStudents []int64   `json:"enrolled_students,omitempty"`
+	Status           string    `json:"status" validate:"omitempty,oneof=active inactive"`
+	CreatedAt        time.Time `json:"created_at,omitempty"`
+	UpdatedAt        time.Time `json:"updated_at,omitempty"`
+}

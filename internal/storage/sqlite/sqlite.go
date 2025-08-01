@@ -55,6 +55,27 @@ func New(cfg *config.Config) (*Sqlite, error) {
 
 	}
 
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS courses(
+ 	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	course_code TEXT NOT NULL UNIQUE,
+    course_name TEXT NOT NULL UNIQUE,
+    description TEXT,
+    credits INTEGER NOT NULL,
+    instructor TEXT,
+    department TEXT,
+    semester TEXT,
+    academic_year TEXT,
+    capacity INTEGER,
+    status TEXT,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+	)`)
+
+	if err != nil {
+		return nil, err
+
+	}
+
 	return &Sqlite{
 		Db: db,
 	}, nil
@@ -341,4 +362,27 @@ func (s *Sqlite) checkEmailExists(email string) (bool, error) {
 		return false, err
 	}
 	return count > 0, nil
+}
+
+//course
+
+func (s *Sqlite) CreateCourse(course model.Course) (int64, error) {
+
+	//s.Db.Prepare("INSERT INTO students (name, email, age, phone, address, gender, enrollment_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+	result, err := s.Db.Exec("INSERT INTO courses (course_code, course_name, description, credits, instructor, department, semester, academic_year, capacity, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		course.CourseCode, course.CourseName, course.Description, course.Credits,
+		course.Instructor, course.Department, course.Semester, course.AcademicYear,
+		course.Capacity, course.Status, course.CreatedAt, course.UpdatedAt)
+
+	if err != nil {
+		return 0, err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
+
 }
