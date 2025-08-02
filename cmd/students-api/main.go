@@ -50,6 +50,7 @@ func main() {
 	router.HandleFunc("PUT /api/students/{id}", middleware.JWTMiddleware(student.UpdateStudent(storage)))
 	router.HandleFunc("GET /api/students/search", middleware.JWTMiddleware(student.SearchStudent(storage)))
 	router.HandleFunc("POST /api/course", middleware.JWTMiddleware(course.New(storage)))
+	router.HandleFunc("POST /api/course/batch", middleware.JWTMiddleware(course.NewBatch(storage)))
 
 	//setup server
 

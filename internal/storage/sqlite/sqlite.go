@@ -368,7 +368,7 @@ func (s *Sqlite) checkEmailExists(email string) (bool, error) {
 
 func (s *Sqlite) CreateCourse(course model.Course) (int64, error) {
 
-	//s.Db.Prepare("INSERT INTO students (name, email, age, phone, address, gender, enrollment_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+	//slog.Info("course", "struct", course)
 	result, err := s.Db.Exec("INSERT INTO courses (course_code, course_name, description, credits, instructor, department, semester, academic_year, capacity, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		course.CourseCode, course.CourseName, course.Description, course.Credits,
 		course.Instructor, course.Department, course.Semester, course.AcademicYear,
