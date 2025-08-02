@@ -21,4 +21,5 @@ type Storage interface {
 	//courses
 	CreateCourse(course model.Course) (int64, error)
 	GetCourseById(id int64) (*model.Course, error)
+	GetAllCourses() ([]model.Course, error)
 }

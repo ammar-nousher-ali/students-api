@@ -404,3 +404,33 @@ func (s *Sqlite) GetCourseById(id int64) (*model.Course, error) {
 	return &course, nil
 
 }
+
+func (s *Sqlite) GetAllCourses() ([]model.Course, error) {
+
+	var courses []model.Course
+
+	rows, err := s.Db.Query("SELECT * from courses")
+	if err != nil {
+		return courses, err
+	}
+	//rows.Next() moves to the next row in the result set.
+	//It returns true as long as more rows are available.
+	for rows.Next() {
+
+		var course model.Course
+
+		err := rows.Scan(&course.Id, &course.CourseCode, &course.CourseName, &course.Description, &course.Credits,
+			&course.Instructor, &course.Department, &course.Semester, &course.AcademicYear,
+			&course.Capacity, &course.Status, &course.CreatedAt, &course.UpdatedAt)
+
+		if err != nil {
+			return nil, err
+		}
+
+		courses = append(courses, course)
+
+	}
+
+	return courses, nil
+
+}
