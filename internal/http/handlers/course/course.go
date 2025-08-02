@@ -1,6 +1,7 @@
 package course
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -114,6 +116,34 @@ func NewBatch(storage storage.Storage) http.HandlerFunc {
 		}
 
 		response.WriteJson(w, http.StatusOK, response.GeneralBatchResponse("success", http.StatusOK, batchResponse.Data))
+
+	}
+
+}
+
+func GetById(storage storage.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		strId := r.PathValue("id")
+
+		id, err := strconv.ParseInt(strId, 10, 64)
+		if err != nil {
+			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(fmt.Errorf("invalid ID format. Please enter a valid number"), http.StatusBadRequest))
+			return
+		}
+
+		course, err := storage.GetCourseById(id)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				response.WriteJson(w, http.StatusNotFound, response.GeneralError(fmt.Errorf("no course found for this id"), http.StatusNotFound))
+				return
+
+			}
+			response.WriteJson(w, http.StatusInternalServerError, response.GeneralError(err, http.StatusInternalServerError))
+			return
+		}
+
+		response.WriteJson(w, http.StatusOK, response.GeneralResponse("success", http.StatusOK, course))
 
 	}
 

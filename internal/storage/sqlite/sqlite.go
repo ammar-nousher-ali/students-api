@@ -386,3 +386,21 @@ func (s *Sqlite) CreateCourse(course model.Course) (int64, error) {
 	return id, nil
 
 }
+
+func (s *Sqlite) GetCourseById(id int64) (*model.Course, error) {
+
+	var course model.Course
+
+	row := s.Db.QueryRow("SELECT id, course_code, course_name, description, credits, instructor, department, semester, academic_year, capacity, status, created_at, updated_at from courses WHERE id = ?", id)
+
+	err := row.Scan(&course.Id, &course.CourseCode, &course.CourseName, &course.Description, &course.Credits,
+		&course.Instructor, &course.Department, &course.Semester, &course.AcademicYear,
+		&course.Capacity, &course.Status, &course.CreatedAt, &course.UpdatedAt)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &course, nil
+
+}
