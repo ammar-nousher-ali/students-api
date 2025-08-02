@@ -49,8 +49,9 @@ func main() {
 	router.HandleFunc("DELETE /api/students/{id}", middleware.JWTMiddleware(student.DeleteStudent(storage)))
 	router.HandleFunc("PUT /api/students/{id}", middleware.JWTMiddleware(student.UpdateStudent(storage)))
 	router.HandleFunc("GET /api/students/search", middleware.JWTMiddleware(student.SearchStudent(storage)))
-	router.HandleFunc("POST /api/course", middleware.JWTMiddleware(course.New(storage)))
-	router.HandleFunc("POST /api/course/batch", middleware.JWTMiddleware(course.NewBatch(storage)))
+	router.HandleFunc("POST /api/courses", middleware.JWTMiddleware(course.New(storage)))
+	router.HandleFunc("POST /api/courses/batch", middleware.JWTMiddleware(course.NewBatch(storage)))
+	router.HandleFunc("POST /api/courses/", middleware.JWTMiddleware(course.NewBatch(storage)))
 
 	//setup server
 
