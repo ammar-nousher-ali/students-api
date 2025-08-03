@@ -283,7 +283,7 @@ func (s *Sqlite) SearchStudent(queryStr string) (*[]model.Student, error) {
 		return nil, err
 	}
 
-	defer rows.Close()
+	//defer rows.Close()
 
 	var students []model.Student
 
@@ -530,5 +530,37 @@ func (s *Sqlite) DeleteCourseById(id int64) (int64, error) {
 	}
 
 	return id, nil
+
+}
+
+func (s *Sqlite) SearchCourse(query string) (*[]model.Course, error) {
+	dbQuery := "SELECT * from courses WHERE course_name LIKE ?"
+	rows, err := s.Db.Query(dbQuery, "%"+strings.ToLower(query)+"%")
+
+	if err != nil {
+		return nil, err
+	}
+
+	var courses []model.Course
+
+	for rows.Next() {
+		var course model.Course
+		err := rows.Scan(&course.Id, &course.CourseCode, &course.CourseName, &course.Description, &course.Credits,
+			&course.Instructor, &course.Department, &course.Semester, &course.AcademicYear,
+			&course.Capacity, &course.Status, &course.CreatedAt, &course.UpdatedAt)
+		if err != nil {
+			return nil, err
+
+		}
+
+		courses = append(courses, course)
+
+	}
+
+	if len(courses) == 0 {
+		return nil, sql.ErrNoRows
+	}
+
+	return &courses, nil
 
 }

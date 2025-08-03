@@ -24,4 +24,5 @@ type Storage interface {
 	GetAllCourses() ([]model.Course, error)
 	UpdateCourse(id int64, req model.CourseUpdateRequest) (*model.Course, error)
 	DeleteCourseById(id int64) (int64, error)
+	SearchCourse(query string) (*[]model.Course, error)
 }

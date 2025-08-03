@@ -228,3 +228,30 @@ func Delete(storage storage.Storage) http.HandlerFunc {
 		}))
 	}
 }
+
+func Search(storage storage.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		queryStr := r.URL.Query().Get("query")
+		if strings.ToLower(queryStr) == "" {
+			emptyQueryErr := fmt.Errorf("please enter something to search")
+			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(emptyQueryErr, http.StatusBadRequest))
+			return
+		}
+
+		courses, err := storage.SearchCourse(queryStr)
+		if err != nil {
+
+			if errors.Is(err, sql.ErrNoRows) {
+				response.WriteJson(w, http.StatusNotFound, response.GeneralError(fmt.Errorf("no search result found for %s", queryStr), http.StatusNotFound))
+				return
+			}
+
+			response.WriteJson(w, http.StatusInternalServerError, response.GeneralError(err, http.StatusInternalServerError))
+			return
+		}
+
+		response.WriteJson(w, http.StatusOK, response.GeneralResponse("succcess", http.StatusOK, courses))
+
+	}
+}

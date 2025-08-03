@@ -59,6 +59,7 @@ func main() {
 	router.HandleFunc("GET /api/courses", middleware.JWTMiddleware(course.GetAll(storage)))
 	router.HandleFunc("PUT /api/courses/{id}", middleware.JWTMiddleware(course.Update(storage)))
 	router.HandleFunc("DELETE /api/courses/{id}", middleware.JWTMiddleware(course.Delete(storage)))
+	router.HandleFunc("GET /api/courses/search", middleware.JWTMiddleware(course.Search(storage)))
 
 	corsHandler := enableCORS(router)
 
