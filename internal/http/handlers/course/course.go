@@ -199,3 +199,32 @@ func Update(storage storage.Storage) http.HandlerFunc {
 
 	}
 }
+
+func Delete(storage storage.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		strId := r.PathValue("id")
+		id, err := strconv.ParseInt(strId, 10, 64)
+		if err != nil {
+			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(fmt.Errorf("invalid request, error while parsing your request"), http.StatusBadRequest))
+			return
+		}
+
+		deletedId, err := storage.DeleteCourseById(id)
+
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				response.WriteJson(w, http.StatusNotFound, response.GeneralError(fmt.Errorf("no course found for the given id"), http.StatusNotFound))
+				return
+			}
+
+			response.WriteJson(w, http.StatusInternalServerError, response.GeneralError(err, http.StatusInternalServerError))
+			return
+
+		}
+
+		response.WriteJson(w, http.StatusOK, response.GeneralResponse("success", http.StatusOK, map[string]any{
+			"id": deletedId,
+		}))
+	}
+}

@@ -511,3 +511,24 @@ func (s *Sqlite) UpdateCourse(id int64, req model.CourseUpdateRequest) (*model.C
 	return course, nil
 
 }
+
+func (s *Sqlite) DeleteCourseById(id int64) (int64, error) {
+
+	res, err := s.Db.Exec("DELETE from courses WHERE id = ?", id)
+	if err != nil {
+		return 0, err
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+
+	if rows == 0 {
+
+		return 0, sql.ErrNoRows
+	}
+
+	return id, nil
+
+}
