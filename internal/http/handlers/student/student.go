@@ -154,7 +154,7 @@ func GetById(storage storage.Storage) http.HandlerFunc {
 			response.WriteJson(w,
 				http.StatusBadRequest,
 				response.GeneralError(
-					fmt.Errorf("empty body"),
+					fmt.Errorf("invalid ID format. Please enter a valid number"),
 					http.StatusBadRequest,
 				),
 			)

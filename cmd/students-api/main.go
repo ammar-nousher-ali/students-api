@@ -4,6 +4,7 @@ import (
 	"context"
 	"github/com/ammar-nousher-ali/students-api/internal/config"
 	"github/com/ammar-nousher-ali/students-api/internal/http/handlers/auth"
+	"github/com/ammar-nousher-ali/students-api/internal/http/handlers/course"
 	"github/com/ammar-nousher-ali/students-api/internal/http/handlers/student"
 	"github/com/ammar-nousher-ali/students-api/internal/middleware"
 	"github/com/ammar-nousher-ali/students-api/internal/storage/sqlite"
@@ -41,6 +42,8 @@ func main() {
 	router.HandleFunc("POST /api/signin", auth.SignIn(storage))
 
 	//Protected routes
+
+	//students
 	router.HandleFunc("POST /api/students", middleware.JWTMiddleware(student.New(storage)))
 	router.HandleFunc("POST /api/students/batch", middleware.JWTMiddleware(student.NewBatch(storage)))
 	router.HandleFunc("GET /api/students/{id}", middleware.JWTMiddleware(student.GetById(storage)))
@@ -49,11 +52,22 @@ func main() {
 	router.HandleFunc("PUT /api/students/{id}", middleware.JWTMiddleware(student.UpdateStudent(storage)))
 	router.HandleFunc("GET /api/students/search", middleware.JWTMiddleware(student.SearchStudent(storage)))
 
+	//courses
+	router.HandleFunc("POST /api/courses", middleware.JWTMiddleware(course.New(storage)))
+	router.HandleFunc("POST /api/courses/batch", middleware.JWTMiddleware(course.NewBatch(storage)))
+	router.HandleFunc("GET /api/courses/{id}", middleware.JWTMiddleware(course.GetById(storage)))
+	router.HandleFunc("GET /api/courses", middleware.JWTMiddleware(course.GetAll(storage)))
+	router.HandleFunc("PUT /api/courses/{id}", middleware.JWTMiddleware(course.Update(storage)))
+	router.HandleFunc("DELETE /api/courses/{id}", middleware.JWTMiddleware(course.Delete(storage)))
+	router.HandleFunc("GET /api/courses/search", middleware.JWTMiddleware(course.Search(storage)))
+
+	corsHandler := enableCORS(router)
+
 	//setup server
 
 	server := http.Server{
 		Addr:    cfg.Addr,
-		Handler: router,
+		Handler: corsHandler,
 	}
 
 	slog.Info("Server started", slog.String("address", cfg.Addr))
@@ -84,4 +98,24 @@ func main() {
 
 	slog.Info("server shutdown successfully.")
 
+}
+
+// CORS middleware function
+func enableCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Set CORS headers
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+
+		// Handle preflight requests
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		// Call the next handler
+		next.ServeHTTP(w, r)
+	})
 }

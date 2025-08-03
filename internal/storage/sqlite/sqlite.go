@@ -55,6 +55,27 @@ func New(cfg *config.Config) (*Sqlite, error) {
 
 	}
 
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS courses(
+ 	id INTEGER PRIMARY KEY AUTOINCREMENT,
+	course_code TEXT NOT NULL UNIQUE,
+    course_name TEXT NOT NULL UNIQUE,
+    description TEXT,
+    credits INTEGER NOT NULL,
+    instructor TEXT,
+    department TEXT,
+    semester TEXT,
+    academic_year TEXT,
+    capacity INTEGER,
+    status TEXT,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+	)`)
+
+	if err != nil {
+		return nil, err
+
+	}
+
 	return &Sqlite{
 		Db: db,
 	}, nil
@@ -180,6 +201,8 @@ func (s *Sqlite) UpdateStudentById(studentId int64, req model.StudentUpdateReque
 	var fields []string
 	var args []any
 
+	//Why *req.Name and not req.Name?
+	//Because req.Name is of type *string (a pointer), and you need the actual value (type string) to pass as a query argument.
 	if req.Name != nil {
 		fields = append(fields, "name = ?")
 		args = append(args, *req.Name)
@@ -260,7 +283,7 @@ func (s *Sqlite) SearchStudent(queryStr string) (*[]model.Student, error) {
 		return nil, err
 	}
 
-	defer rows.Close()
+	//defer rows.Close()
 
 	var students []model.Student
 
@@ -341,4 +364,203 @@ func (s *Sqlite) checkEmailExists(email string) (bool, error) {
 		return false, err
 	}
 	return count > 0, nil
+}
+
+//course
+
+func (s *Sqlite) CreateCourse(course model.Course) (int64, error) {
+
+	//slog.Info("course", "struct", course)
+	result, err := s.Db.Exec("INSERT INTO courses (course_code, course_name, description, credits, instructor, department, semester, academic_year, capacity, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		course.CourseCode, course.CourseName, course.Description, course.Credits,
+		course.Instructor, course.Department, course.Semester, course.AcademicYear,
+		course.Capacity, course.Status, course.CreatedAt, course.UpdatedAt)
+
+	if err != nil {
+		return 0, err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
+
+}
+
+func (s *Sqlite) GetCourseById(id int64) (*model.Course, error) {
+
+	var course model.Course
+
+	row := s.Db.QueryRow("SELECT id, course_code, course_name, description, credits, instructor, department, semester, academic_year, capacity, status, created_at, updated_at from courses WHERE id = ?", id)
+
+	err := row.Scan(&course.Id, &course.CourseCode, &course.CourseName, &course.Description, &course.Credits,
+		&course.Instructor, &course.Department, &course.Semester, &course.AcademicYear,
+		&course.Capacity, &course.Status, &course.CreatedAt, &course.UpdatedAt)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &course, nil
+
+}
+
+func (s *Sqlite) GetAllCourses() ([]model.Course, error) {
+
+	var courses []model.Course
+
+	rows, err := s.Db.Query("SELECT * from courses")
+	if err != nil {
+		return courses, err
+	}
+	//rows.Next() moves to the next row in the result set.
+	//It returns true as long as more rows are available.
+	for rows.Next() {
+
+		var course model.Course
+
+		err := rows.Scan(&course.Id, &course.CourseCode, &course.CourseName, &course.Description, &course.Credits,
+			&course.Instructor, &course.Department, &course.Semester, &course.AcademicYear,
+			&course.Capacity, &course.Status, &course.CreatedAt, &course.UpdatedAt)
+
+		if err != nil {
+			return nil, err
+		}
+
+		courses = append(courses, course)
+
+	}
+
+	return courses, nil
+
+}
+
+func (s *Sqlite) UpdateCourse(id int64, req model.CourseUpdateRequest) (*model.Course, error) {
+	var fields []string
+	var args []any
+
+	if req.CourseCode != nil {
+		fields = append(fields, "course_code = ?")
+		args = append(args, *req.CourseCode)
+	}
+
+	if req.CourseName != nil {
+		fields = append(fields, "course_name = ?")
+		args = append(args, *req.CourseName)
+	}
+
+	if req.Description != nil {
+		fields = append(fields, "description = ?")
+		args = append(args, *req.Description)
+	}
+
+	if req.Credits != nil {
+		fields = append(fields, "credits = ?")
+		args = append(args, *req.Credits)
+	}
+
+	if req.Instructor != nil {
+		fields = append(fields, "instructor = ?")
+		args = append(args, *req.Instructor)
+	}
+
+	if req.Department != nil {
+		fields = append(fields, "department = ?")
+		args = append(args, *req.Department)
+	}
+
+	if req.Semester != nil {
+		fields = append(fields, "semester = ?")
+		args = append(args, *req.Semester)
+	}
+
+	if req.AcademicYear != nil {
+		fields = append(fields, "academic_year = ?")
+		args = append(args, *req.AcademicYear)
+	}
+
+	if req.Capacity != nil {
+		fields = append(fields, "capacity = ?")
+		args = append(args, *req.Capacity)
+	}
+
+	if req.Status != nil {
+		fields = append(fields, "status = ?")
+		args = append(args, *req.Status)
+	}
+
+	if req.UpdatedAt != nil {
+		fields = append(fields, "updated_at = ?")
+		args = append(args, *req.UpdatedAt)
+	}
+	args = append(args, id)
+	query := fmt.Sprintf("UPDATE courses SET %s WHERE id = ?", strings.Join(fields, ", "))
+
+	_, err := s.Db.Exec(query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	course, err := s.GetCourseById(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return course, nil
+
+}
+
+func (s *Sqlite) DeleteCourseById(id int64) (int64, error) {
+
+	res, err := s.Db.Exec("DELETE from courses WHERE id = ?", id)
+	if err != nil {
+		return 0, err
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+
+	if rows == 0 {
+
+		return 0, sql.ErrNoRows
+	}
+
+	return id, nil
+
+}
+
+func (s *Sqlite) SearchCourse(query string) (*[]model.Course, error) {
+	dbQuery := "SELECT * from courses WHERE course_name LIKE ?"
+	rows, err := s.Db.Query(dbQuery, "%"+strings.ToLower(query)+"%")
+
+	if err != nil {
+		return nil, err
+	}
+
+	var courses []model.Course
+
+	for rows.Next() {
+		var course model.Course
+		err := rows.Scan(&course.Id, &course.CourseCode, &course.CourseName, &course.Description, &course.Credits,
+			&course.Instructor, &course.Department, &course.Semester, &course.AcademicYear,
+			&course.Capacity, &course.Status, &course.CreatedAt, &course.UpdatedAt)
+		if err != nil {
+			return nil, err
+
+		}
+
+		courses = append(courses, course)
+
+	}
+
+	if len(courses) == 0 {
+		return nil, sql.ErrNoRows
+	}
+
+	return &courses, nil
+
 }
