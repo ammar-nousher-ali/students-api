@@ -166,3 +166,36 @@ func GetAll(storage storage.Storage) http.HandlerFunc {
 		response.WriteJson(w, http.StatusOK, response.GeneralResponse("success", http.StatusOK, courses))
 	}
 }
+
+func Update(storage storage.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		strId := r.PathValue("id")
+		id, err := strconv.ParseInt(strId, 10, 64)
+		if err != nil {
+			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(err, http.StatusBadRequest))
+			return
+		}
+		var req model.CourseUpdateRequest
+		error := json.NewDecoder(r.Body).Decode(&req)
+		if error != nil {
+			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(error, http.StatusBadRequest))
+			return
+		}
+
+		course, err := storage.UpdateCourse(id, req)
+
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				response.WriteJson(w, http.StatusNotFound, response.GeneralError(fmt.Errorf("no course found for the given id"), http.StatusNotFound))
+				return
+			}
+
+			response.WriteJson(w, http.StatusInternalServerError, response.GeneralError(err, http.StatusInternalServerError))
+			return
+		}
+
+		response.WriteJson(w, http.StatusOK, response.GeneralResponse("success", http.StatusOK, course))
+
+	}
+}

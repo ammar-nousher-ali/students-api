@@ -201,6 +201,8 @@ func (s *Sqlite) UpdateStudentById(studentId int64, req model.StudentUpdateReque
 	var fields []string
 	var args []any
 
+	//Why *req.Name and not req.Name?
+	//Because req.Name is of type *string (a pointer), and you need the actual value (type string) to pass as a query argument.
 	if req.Name != nil {
 		fields = append(fields, "name = ?")
 		args = append(args, *req.Name)
@@ -432,5 +434,80 @@ func (s *Sqlite) GetAllCourses() ([]model.Course, error) {
 	}
 
 	return courses, nil
+
+}
+
+func (s *Sqlite) UpdateCourse(id int64, req model.CourseUpdateRequest) (*model.Course, error) {
+	var fields []string
+	var args []any
+
+	if req.CourseCode != nil {
+		fields = append(fields, "course_code = ?")
+		args = append(args, *req.CourseCode)
+	}
+
+	if req.CourseName != nil {
+		fields = append(fields, "course_name = ?")
+		args = append(args, *req.CourseName)
+	}
+
+	if req.Description != nil {
+		fields = append(fields, "description = ?")
+		args = append(args, *req.Description)
+	}
+
+	if req.Credits != nil {
+		fields = append(fields, "credits = ?")
+		args = append(args, *req.Credits)
+	}
+
+	if req.Instructor != nil {
+		fields = append(fields, "instructor = ?")
+		args = append(args, *req.Instructor)
+	}
+
+	if req.Department != nil {
+		fields = append(fields, "department = ?")
+		args = append(args, *req.Department)
+	}
+
+	if req.Semester != nil {
+		fields = append(fields, "semester = ?")
+		args = append(args, *req.Semester)
+	}
+
+	if req.AcademicYear != nil {
+		fields = append(fields, "academic_year = ?")
+		args = append(args, *req.AcademicYear)
+	}
+
+	if req.Capacity != nil {
+		fields = append(fields, "capacity = ?")
+		args = append(args, *req.Capacity)
+	}
+
+	if req.Status != nil {
+		fields = append(fields, "status = ?")
+		args = append(args, *req.Status)
+	}
+
+	if req.UpdatedAt != nil {
+		fields = append(fields, "updated_at = ?")
+		args = append(args, *req.UpdatedAt)
+	}
+	args = append(args, id)
+	query := fmt.Sprintf("UPDATE courses SET %s WHERE id = ?", strings.Join(fields, ", "))
+
+	_, err := s.Db.Exec(query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	course, err := s.GetCourseById(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return course, nil
 
 }
