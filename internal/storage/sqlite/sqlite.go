@@ -76,6 +76,22 @@ func New(cfg *config.Config) (*Sqlite, error) {
 
 	}
 
+	_, err = db.Exec(`
+		CREATE  TABLE student_courses
+		(
+		    student_id INTEGER,
+		    course_id INTEGER,
+		    enrolled_at TIMESTAMP,
+		    PRIMARY KEY (student_id,course_id),
+		    FOREIGN KEY (student_id) REFERENCES student(id),
+		    FOREIGN KEY (course_id) REFERENCES courses(id)
+		)
+		`)
+
+	if err != nil {
+		return nil, err
+	}
+
 	return &Sqlite{
 		Db: db,
 	}, nil
