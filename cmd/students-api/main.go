@@ -8,6 +8,7 @@ import (
 	student_courses "github/com/ammar-nousher-ali/students-api/internal/http/handlers/enroll_student"
 	"github/com/ammar-nousher-ali/students-api/internal/http/handlers/student"
 	"github/com/ammar-nousher-ali/students-api/internal/middleware"
+	_ "github/com/ammar-nousher-ali/students-api/internal/model"
 	"github/com/ammar-nousher-ali/students-api/internal/storage/sqlite"
 	"log"
 	"log/slog"
@@ -64,6 +65,7 @@ func main() {
 
 	//student courses
 	router.HandleFunc("POST /api/students/{student_id}/enroll", middleware.JWTMiddleware(student_courses.EnrollStudent(storage)))
+	router.HandleFunc("GET /api/students/{student_id}/courses", middleware.JWTMiddleware(student_courses.GetStudentWithEnrolledCourse(storage)))
 
 	corsHandler := enableCORS(router)
 

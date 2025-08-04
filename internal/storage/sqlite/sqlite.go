@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github/com/ammar-nousher-ali/students-api/internal/config"
 	"github/com/ammar-nousher-ali/students-api/internal/model"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -614,4 +615,43 @@ func (s *Sqlite) EnrollStudentInCourse(studentId int64, req model.EnrollRequest)
 
 	return &response, nil
 
+}
+
+func (s *Sqlite) FetchStudentWithEnrolledCourse(studentId int64) (*model.StudentWithCoursesResponse, error) {
+	query := "SELECT s.id AS student_id, s.name AS student_name, s.email AS student_email, c.id AS course_id, c.course_code, c.course_name, c.credits, c.semester, c.status FROM students s JOIN student_courses sc ON s.id = sc.student_id JOIN courses c ON c.id = sc.course_id WHERE s.id = %d"
+
+	dbQuery := fmt.Sprintf(query, studentId)
+
+	var response model.StudentWithCoursesResponse
+	var courses []model.Course
+
+	rows, err := s.Db.Query(dbQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var course model.Course
+		err := rows.Scan(
+			&response.StudentID,
+			&response.StudentName,
+			&response.StudentEmail,
+			&course.Id,
+			&course.CourseCode,
+			&course.CourseName,
+			&course.Credits,
+			&course.Semester,
+			&course.Status,
+		)
+		if err != nil {
+			slog.Info("error", "error", err)
+			return nil, err
+		}
+
+		courses = append(courses, course)
+	}
+
+	response.Courses = courses
+
+	return &response, nil
 }

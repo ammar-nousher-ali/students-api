@@ -28,4 +28,5 @@ type Storage interface {
 
 	//enroll students
 	EnrollStudentInCourse(studentId int64, courses model.EnrollRequest) (*model.EnrollmentResponse, error)
+	FetchStudentWithEnrolledCourse(studentId int64) (*model.StudentWithCoursesResponse, error)
 }

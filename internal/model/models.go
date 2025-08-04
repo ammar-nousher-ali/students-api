@@ -90,3 +90,10 @@ type EnrollmentFail struct {
 	CourseID int64  `json:"course_id"`
 	Error    string `json:"error"`
 }
+
+type StudentWithCoursesResponse struct {
+	StudentID    int64    `json:"student_id"`
+	StudentName  string   `json:"student_name"`
+	StudentEmail string   `json:"student_email"`
+	Courses      []Course `json:"courses"`
+}

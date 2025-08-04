@@ -15,7 +15,7 @@ func EnrollStudent(storage storage.Storage) http.HandlerFunc {
 
 		strId := r.PathValue("student_id")
 		if len(strId) == 0 {
-			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(fmt.Errorf("please add student id to url"), http.StatusBadRequest))
+			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(fmt.Errorf("please add correct path params"), http.StatusBadRequest))
 			return
 
 		}
@@ -41,6 +41,32 @@ func EnrollStudent(storage storage.Storage) http.HandlerFunc {
 		}
 
 		response.WriteJson(w, http.StatusOK, response.GeneralResponse("success", http.StatusOK, result))
+
+	}
+}
+
+func GetStudentWithEnrolledCourse(storage storage.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		strId := r.PathValue("student_id")
+		if len(strId) == 0 {
+			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(fmt.Errorf("please add correct path params"), http.StatusBadRequest))
+			return
+		}
+
+		studentId, err := strconv.ParseInt(strId, 10, 64)
+		if err != nil {
+			response.WriteJson(w, http.StatusBadRequest, response.GeneralError(fmt.Errorf("invalid student id"), http.StatusBadRequest))
+			return
+		}
+
+		studentWithCoursesResponse, err := storage.FetchStudentWithEnrolledCourse(studentId)
+		if err != nil {
+			response.WriteJson(w, http.StatusInternalServerError, response.GeneralError(err, http.StatusInternalServerError))
+			return
+		}
+
+		response.WriteJson(w, http.StatusOK, response.GeneralResponse("success", http.StatusOK, studentWithCoursesResponse))
 
 	}
 }
