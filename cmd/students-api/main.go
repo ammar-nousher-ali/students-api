@@ -5,6 +5,7 @@ import (
 	"github/com/ammar-nousher-ali/students-api/internal/config"
 	"github/com/ammar-nousher-ali/students-api/internal/http/handlers/auth"
 	"github/com/ammar-nousher-ali/students-api/internal/http/handlers/course"
+	student_courses "github/com/ammar-nousher-ali/students-api/internal/http/handlers/enroll_student"
 	"github/com/ammar-nousher-ali/students-api/internal/http/handlers/student"
 	"github/com/ammar-nousher-ali/students-api/internal/middleware"
 	"github/com/ammar-nousher-ali/students-api/internal/storage/sqlite"
@@ -60,6 +61,9 @@ func main() {
 	router.HandleFunc("PUT /api/courses/{id}", middleware.JWTMiddleware(course.Update(storage)))
 	router.HandleFunc("DELETE /api/courses/{id}", middleware.JWTMiddleware(course.Delete(storage)))
 	router.HandleFunc("GET /api/courses/search", middleware.JWTMiddleware(course.Search(storage)))
+
+	//student courses
+	router.HandleFunc("POST /api/students/{student_id}/enroll", middleware.JWTMiddleware(student_courses.EnrollStudent(storage)))
 
 	corsHandler := enableCORS(router)
 

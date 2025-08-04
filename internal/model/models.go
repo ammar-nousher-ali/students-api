@@ -75,3 +75,18 @@ type Course struct {
 	CreatedAt        time.Time `json:"created_at,omitempty"`
 	UpdatedAt        time.Time `json:"updated_at,omitempty"`
 }
+
+type EnrollRequest struct {
+	Courses []int64 `json:"courses"`
+}
+
+type EnrollmentResponse struct {
+	StudentId       int64            `json:"student_id"`
+	EnrolledCourses []int64          `json:"enrolled_courses,omitempty"`
+	FailedCourses   []EnrollmentFail `json:"failed_courses,omitempty"`
+}
+
+type EnrollmentFail struct {
+	CourseID int64  `json:"course_id"`
+	Error    string `json:"error"`
+}

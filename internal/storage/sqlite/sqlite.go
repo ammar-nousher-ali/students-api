@@ -77,7 +77,7 @@ func New(cfg *config.Config) (*Sqlite, error) {
 	}
 
 	_, err = db.Exec(`
-		CREATE  TABLE student_courses
+		CREATE TABLE IF NOT EXISTS student_courses
 		(
 		    student_id INTEGER,
 		    course_id INTEGER,
@@ -578,5 +578,40 @@ func (s *Sqlite) SearchCourse(query string) (*[]model.Course, error) {
 	}
 
 	return &courses, nil
+
+}
+
+func (s *Sqlite) EnrollStudentInCourse(studentId int64, req model.EnrollRequest) (*model.EnrollmentResponse, error) {
+
+	var response model.EnrollmentResponse
+	stmt, err := s.Db.Prepare("INSERT INTO student_courses (student_id, course_id, enrolled_at) VALUES (?, ?, ?)")
+	if err != nil {
+		return nil, err
+	}
+
+	defer stmt.Close()
+
+	response.StudentId = studentId
+
+	for _, courseId := range req.Courses {
+		_, err := stmt.Exec(studentId, courseId, time.Now())
+		if err != nil {
+			var reason string
+			if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+				reason = "student is already enrolled in this course"
+			} else {
+				reason = err.Error()
+			}
+			response.FailedCourses = append(response.FailedCourses, model.EnrollmentFail{
+				CourseID: courseId,
+				Error:    reason,
+			})
+		} else {
+			response.EnrolledCourses = append(response.EnrolledCourses, courseId)
+		}
+
+	}
+
+	return &response, nil
 
 }
