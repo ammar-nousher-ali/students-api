@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github/com/ammar-nousher-ali/students-api/internal/config"
 	"github/com/ammar-nousher-ali/students-api/internal/model"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -77,7 +78,7 @@ func New(cfg *config.Config) (*Sqlite, error) {
 	}
 
 	_, err = db.Exec(`
-		CREATE  TABLE student_courses
+		CREATE TABLE IF NOT EXISTS student_courses
 		(
 		    student_id INTEGER,
 		    course_id INTEGER,
@@ -579,4 +580,78 @@ func (s *Sqlite) SearchCourse(query string) (*[]model.Course, error) {
 
 	return &courses, nil
 
+}
+
+func (s *Sqlite) EnrollStudentInCourse(studentId int64, req model.EnrollRequest) (*model.EnrollmentResponse, error) {
+
+	var response model.EnrollmentResponse
+	stmt, err := s.Db.Prepare("INSERT INTO student_courses (student_id, course_id, enrolled_at) VALUES (?, ?, ?)")
+	if err != nil {
+		return nil, err
+	}
+
+	defer stmt.Close()
+
+	response.StudentId = studentId
+
+	for _, courseId := range req.Courses {
+		_, err := stmt.Exec(studentId, courseId, time.Now())
+		if err != nil {
+			var reason string
+			if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+				reason = "student is already enrolled in this course"
+			} else {
+				reason = err.Error()
+			}
+			response.FailedCourses = append(response.FailedCourses, model.EnrollmentFail{
+				CourseID: courseId,
+				Error:    reason,
+			})
+		} else {
+			response.EnrolledCourses = append(response.EnrolledCourses, courseId)
+		}
+
+	}
+
+	return &response, nil
+
+}
+
+func (s *Sqlite) FetchStudentWithEnrolledCourse(studentId int64) (*model.StudentWithCoursesResponse, error) {
+	query := "SELECT s.id AS student_id, s.name AS student_name, s.email AS student_email, c.id AS course_id, c.course_code, c.course_name, c.credits, c.semester, c.status FROM students s JOIN student_courses sc ON s.id = sc.student_id JOIN courses c ON c.id = sc.course_id WHERE s.id = %d"
+
+	dbQuery := fmt.Sprintf(query, studentId)
+
+	var response model.StudentWithCoursesResponse
+	var courses []model.Course
+
+	rows, err := s.Db.Query(dbQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var course model.Course
+		err := rows.Scan(
+			&response.StudentID,
+			&response.StudentName,
+			&response.StudentEmail,
+			&course.Id,
+			&course.CourseCode,
+			&course.CourseName,
+			&course.Credits,
+			&course.Semester,
+			&course.Status,
+		)
+		if err != nil {
+			slog.Info("error", "error", err)
+			return nil, err
+		}
+
+		courses = append(courses, course)
+	}
+
+	response.Courses = courses
+
+	return &response, nil
 }
